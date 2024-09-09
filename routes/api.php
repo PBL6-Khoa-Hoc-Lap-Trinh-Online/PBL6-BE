@@ -27,7 +27,9 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
-    
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('logout', 'logout');
+    });
 });
 
 

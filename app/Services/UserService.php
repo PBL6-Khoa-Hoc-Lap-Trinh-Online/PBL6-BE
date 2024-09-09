@@ -170,4 +170,14 @@ class UserService{
             return $this->responseError($e->getMessage(),400);
         }
     }
+
+    public function logout(){
+        try{
+            auth()->guard('user_api')->logout();
+            return $this->responseSuccess('Đăng xuất thành công!');
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
