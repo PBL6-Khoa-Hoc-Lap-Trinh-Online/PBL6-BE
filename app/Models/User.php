@@ -70,6 +70,15 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+    public function getAuthPassword()
+    {
+        return $this->user_password; // Laravel sẽ sử dụng user_password cho xác thực
+    }
+    public function getAuthIdentifierName()
+    {
+        return 'user_email'; // Laravel sẽ sử dụng user_email cho xác thực
+    }
+
     public function receiverAddresses(){
         return $this->hasMany(ReceiverAddress::class);
     }

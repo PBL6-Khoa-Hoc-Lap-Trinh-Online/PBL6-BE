@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Enums\UserEnum;
+use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestUserRegister;
 use App\Jobs\SendVerifyEmail;
 use App\Models\User;
@@ -72,6 +73,43 @@ class UserService{
             }
         }catch(Throwable $e){
             DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function login(RequestLogin $request){
+        try{
+            $user = User::where('user_email', $request->email)->first();
+            if(empty($user)){
+                return $this->responseError('Email không tồn tại!');
+            }
+            if($user->user_is_delete == 1){
+                return $this->responseError('Tài khoản đã bị xóa!');
+            }
+            if($user->user_is_block == 1){
+                return $this->responseError('Tài khoản đã bị khóa!');
+            }
+            if($user->email_verified_at == null){
+                return $this->responseError('Email chưa được xác thực! Vui lòng xác thực email trước khi đăng nhập!');
+            }
+            
+            // $credentials = request(['user_email', 'user_password']);
+            $credentials = [
+                'user_email' => $request->email,
+                'password' => $request->password,
+            ];
+            // dd(request()->all());  // In ra tất cả các dữ liệu trong request để kiểm tra
+
+            if(!$token = auth()->guard('user_api')->attempt($credentials)){
+                return $this->responseError('Mật khẩu không chính xác!');
+            }
+            $user->access_token = $token;
+            $user->token_type = 'Bearer';
+            $user->expires_in = auth()->guard('user_api')->factory()->getTTL() * 60;
+            return $this->responseSuccessWithData($user, 'Đăng nhập thành công!');
+        }
+        catch(Throwable $e){
+            dd($e->getMessage());
             return $this->responseError($e->getMessage());
         }
     }
