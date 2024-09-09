@@ -25,6 +25,9 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('verify-email', 'verifyEmail');
     Route::post('login', 'login');
+    Route::post('forgot-password', 'forgotPassword');
+    Route::post('reset-password', 'resetPassword');
+    
 });
 
 

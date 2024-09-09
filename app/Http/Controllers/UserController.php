@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
+use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUserRegister;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -26,5 +28,13 @@ class UserController extends Controller
     public function login(RequestLogin $request)
     {
         return $this->userService->login($request);
+    }
+    public function forgotPassword(RequestForgotPassword $request)
+    {
+        return $this->userService->forgotPassword($request);
+    }
+    public function resetPassword(RequestResetPassword $request)
+    {
+        return $this->userService->resetPassword($request);
     }
 }

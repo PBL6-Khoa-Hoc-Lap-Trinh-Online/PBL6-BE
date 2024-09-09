@@ -2,9 +2,13 @@
 namespace App\Services;
 
 use App\Enums\UserEnum;
+use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
+use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUserRegister;
+use App\Jobs\SendForgotPassword;
 use App\Jobs\SendVerifyEmail;
+use App\Models\PasswordReset;
 use App\Models\User;
 use App\Repositories\UserInterface;
 use App\Traits\APIResponse;
@@ -111,6 +115,59 @@ class UserService{
         catch(Throwable $e){
             dd($e->getMessage());
             return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function forgotPassword(RequestForgotPassword $request){
+        DB::beginTransaction();
+        try{
+            $email = $request->email;
+            $user = User::where('user_email', $email)->first();
+            if(empty($user)){
+                DB::rollback();
+                return $this->responseError('Email không tồn tại trong hệ thống!');
+            }
+            $token = Str::random(32);
+            PasswordReset::create([
+                'email' => $request->email,
+                'token' => $token,
+            ]);
+            $url = UserEnum::FORGOT_PASSWORD_USER . $token;
+            Log::info("Add jobs to Queue, Email:$email with URL: $url");
+            Queue::push(new SendForgotPassword($email, $url));
+            DB::commit();
+            return $this->responseSuccess('Link form đặt lại mật khẩu đã được gửi tới email của Bạn!');
+        }
+        catch(Throwable $e){
+            DB::rollback();
+            return $this->responseError($e->getMessage(),400);
+        }
+    }
+
+    public function resetPassword(RequestResetPassword $request){
+        DB::beginTransaction();
+        try{
+            $token = $request->token ?? '';
+            $newPassword = $request->new_password;
+            $passwordReset = PasswordReset::where('token', $token)->first();
+            if($passwordReset){
+                $user = User::where('user_email',$passwordReset->email)->first();
+                $data = [
+                    'user_password' => Hash::make($newPassword),
+                ];
+                $user->update($data);
+                $passwordReset->delete();
+                DB::commit();
+                return $this->responseSuccess('Đặt lại mật khẩu thành công!');
+            }
+            else{
+                DB::rollback();
+                return $this->responseError('Token đã hết hạn!',400);
+            }
+        }
+        catch(Throwable $e){
+            DB::rollback();
+            return $this->responseError($e->getMessage(),400);
         }
     }
 }
