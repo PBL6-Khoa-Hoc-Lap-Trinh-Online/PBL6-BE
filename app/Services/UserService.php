@@ -6,6 +6,7 @@ use App\Enums\UserEnum;
 use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
+use App\Http\Requests\RequestUpdateProfileUser;
 use App\Http\Requests\RequestUserRegister;
 use App\Jobs\SendForgotPassword;
 use App\Jobs\SendVerifyEmail;
@@ -13,6 +14,7 @@ use App\Models\PasswordReset;
 use App\Models\User;
 use App\Repositories\UserInterface;
 use App\Traits\APIResponse;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -192,6 +194,41 @@ class UserService
             return $this->responseSuccessWithData($user, 'Lấy thông tin người dùng thành công!');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function updateProfile(RequestUpdateProfileUser $request){
+        DB::beginTransaction();
+        try{
+            $id_user = auth('user_api')->user()->user_id;
+            $user = User::find($id_user);
+            if($request->hasFile('user_avatar')){
+                $image = $request->file('user_avatar');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/avatar/user',
+                    'resource_type' => 'auto',
+                ]);
+                $url = $uploadFile->getSecurePath();
+                if($user->user_avatar){
+                    $parsedUrl = pathinfo($user->user_avatar);
+                    $id_file = $parsedUrl['filename'];  // Lấy phần tên file mà không bao gồm phần mở rộng
+                    // Xóa tệp từ Cloudinary
+                    Cloudinary::destroy($id_file);
+                   
+                }
+                $data = array_merge($request->all(), ['user_avatar' => $url]);
+                $user->update($data);
+            }
+            else{
+                $request['user_avatar'] = $user->user_avatar;
+                $user->update($request->all());
+            }
+            DB::commit();
+            return $this->responseSuccessWithData($user, "Cập nhật thông tin tài khoản thành công!");
+        }
+        catch(Throwable $e){
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
         }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
+use App\Http\Requests\RequestUpdateProfileUser;
 use App\Http\Requests\RequestUserRegister;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -43,5 +44,8 @@ class UserController extends Controller
     }
     public function profile(Request $request){
         return $this->userService->profile($request);
+    }
+    public function updateProfile(RequestUpdateProfileUser $request){
+        return $this->userService->updateProfile($request);
     }
 }
