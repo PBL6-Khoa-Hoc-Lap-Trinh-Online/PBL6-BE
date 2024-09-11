@@ -19,28 +19,33 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'user_fullname' => 'Kim Tiến',
-                'user_email' => 'kimtien@yopmail.com',
-                'user_password' => Hash::make('123456')
+                'email' => 'kimtien@yopmail.com',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now()
             ],
             [
                 'user_fullname' => 'Minh Nhật',
-                'user_email' => 'minhnhat@yopmail.com',
-                'user_password' => Hash::make('123456')
+                'email' => 'minhnhat@yopmail.com',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now()
             ],
             [
                 'user_fullname' => 'Đình Phước',
-                'user_email' => 'dinhphuoc@yopmail.com',
-                'user_password' => Hash::make('123456')
+                'email' => 'dinhphuoc@yopmail.com',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now()
             ],
             [
                 'user_fullname' => 'Đình Văn',
-                'user_email' => 'dinhvan@yopmail.com',
-                'user_password' => Hash::make('123456')
+                'email' => 'dinhvan@yopmail.com',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now()
             ],
             [
                 'user_fullname' => 'Nhật Minh',
-                'user_email' => 'nhatminh@yopmail.com',
-                'user_password' => Hash::make('123456')
+                'email' => 'nhatminh@yopmail.com',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now()
             ],
         ];
         foreach ($users as $user) {

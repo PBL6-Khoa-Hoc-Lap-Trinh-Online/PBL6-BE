@@ -16,12 +16,25 @@ class AdminSeeder extends Seeder
      */
     public function run()
     {
-        $data = [
+        $admins = [
+            [
             'admin_fullname' => 'Kim Tien Tran',
-            'admin_email' => 'kimtientran0410@gmail.com',
-            'admin_password' => Hash::make('123456'),
-            'admin_is_admin' => 1
+            'email' => 'kimtientran0410@gmail.com',
+            'password' => Hash::make('123456'),
+            'admin_is_admin' => 1,
+            'email_verified_at'=> now()
+            ],
+            [
+                'admin_fullname' => 'Kim Tien Tran',
+                'email' => 'kimtien@yopmail.com',
+                'password' => Hash::make('123456'),
+                'admin_is_admin' => 0,
+                'email_verified_at' => now()
+            ],
         ];
-        Admin::create($data);
+        foreach ($admins as $admin){
+            Admin::create($admin);
+        }
+       
     }
 }

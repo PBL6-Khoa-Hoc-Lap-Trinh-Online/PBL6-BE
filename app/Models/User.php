@@ -24,8 +24,8 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'user_id',
         'user_fullname',
-        'user_email',
-        'user_password',
+        'email',
+        'password',
         'user_phone',
         'user_birthday',
         'user_gender',
@@ -48,7 +48,7 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $hidden = [
-        'user_password',
+        'password',
         'remember_token',
         'token_verify_email'
     ];
@@ -70,23 +70,17 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-    public function getAuthPassword()
-    {
-        return $this->user_password; // Laravel sẽ sử dụng user_password cho xác thực
-    }
-    public function getAuthIdentifierName()
-    {
-        return 'user_email'; // Laravel sẽ sử dụng user_email cho xác thực
-    }
 
-    public function receiverAddresses(){
+    public function receiverAddresses()
+    {
         return $this->hasMany(ReceiverAddress::class);
     }
-    public function orders(){
+    public function orders()
+    {
         return $this->hasMany(Order::class);
     }
-    public function cart(){
+    public function cart()
+    {
         return $this->hasOne(Cart::class);
     }
-    
 }

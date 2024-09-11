@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('admins', function (Blueprint $table) {
             $table->increments('admin_id');
             $table->string('admin_fullname');
-            $table->string('admin_email')->unique();
-            $table->string('admin_password');
+            $table->string('email')->unique();
+            $table->string('password');
             $table->string('admin_avatar')->nullable();
             $table->boolean('admin_is_admin')->default(0);//0 là admin, 1 là supper_admin
             $table->boolean('admin_is_delete')->default(0);//0 là active, 1 là delete

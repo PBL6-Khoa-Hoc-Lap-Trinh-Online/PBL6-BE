@@ -10,26 +10,16 @@ use Illuminate\Support\Facades\Auth;
 class CheckAuthenticate
 {
     use APIResponse;
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
-  
     public function handle(Request $request, Closure $next, ...$guards)
     {
         foreach ($guards as $guard) {
-            return $next($request);
-        }
-        foreach ($guards as $guard) {
-            if ($guard == 'user_api') {
-                return $this->responseError('Unauthenticated!', 401);
-            }
-            if ($guard == 'admin_api') {
-                return $this->responseError('Unauthenticated!', 401);
+            // dd(Auth::guard($guard)->user());
+            if (Auth::guard($guard)->check()) {
+                return $next($request);
             }
         }
+
+        // Sử dụng response() để tạo một đối tượng Response thay vì JsonResponse
+        return response()->json(['error' => 'Unauthenticated'], 401);
     }
 }

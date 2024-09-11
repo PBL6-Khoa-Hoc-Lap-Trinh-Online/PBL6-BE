@@ -41,4 +41,7 @@ class UserController extends Controller
     {
         return $this->userService->logout($request);
     }
+    public function profile(Request $request){
+        return $this->userService->profile($request);
+    }
 }
