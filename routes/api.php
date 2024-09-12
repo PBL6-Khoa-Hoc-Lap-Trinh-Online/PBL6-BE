@@ -41,6 +41,7 @@ Route::prefix('receiver-address')->controller(ReceiverAddressController::class)-
         Route::get('{id}', 'getAddress');
         Route::post('update/{id}', 'update');
         Route::get('', 'getAll');
+        Route::delete('delete/{id}', 'delete');
     });
 });
 

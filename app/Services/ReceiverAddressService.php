@@ -84,5 +84,24 @@ class ReceiverAddressService
             return $this->responseError($e->getMessage());
         }
     }
+    public function delete(Request $request,$id){
+        DB::beginTransaction();
+        try{
+            $user_id = auth('user_api')->user()->user_id;
+            $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
+            if($receiver_address){
+                $receiver_address->delete();
+                DB::commit();
+                return $this->responseSuccess('Xóa địa chỉ nhận hàng thành công!', 200);
+            }
+            else{
+                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
+            }
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());  
+        }
+    }
 
 }

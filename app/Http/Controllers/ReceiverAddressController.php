@@ -31,4 +31,8 @@ class ReceiverAddressController extends Controller
     {
         return $this->receiverAddressService->getAll($request);
     }
+    public function delete(Request $request,$id)
+    {
+        return $this->receiverAddressService->delete($request,$id);
+    }
 }
