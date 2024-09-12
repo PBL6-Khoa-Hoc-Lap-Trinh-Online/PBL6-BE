@@ -10,7 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
-
+use Illuminate\Support\Facades\Log;
 class SendMailNotify implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -36,5 +36,6 @@ class SendMailNotify implements ShouldQueue
         // Các bước xử lý logic liên quan đến email và content
         Mail::to($email)->send(new MailNotify($content));
         info("Email gửi đến $email với nội dung: $content");
+        Log::info('Email gửi đến $email với nội dung: $content');
     }
 }

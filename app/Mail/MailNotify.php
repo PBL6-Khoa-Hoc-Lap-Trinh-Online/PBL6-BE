@@ -23,37 +23,10 @@ class MailNotify extends Mailable
         $this->content = $content;
     }
 
-    /**
-     * Get the message envelope.
-     *
-     * @return \Illuminate\Mail\Mailables\Envelope
-     */
-    public function envelope()
+    public function build()
     {
-        return new Envelope(
-            subject: 'Mail Notify',
-        );
+        $subject = 'Thông báo từ hệ thống Pharmacity ';
+        return $this->subject($subject)->view('emails.mail_notify')->with('content', $this->content);
     }
-
-    /**
-     * Get the message content definition.
-     *
-     * @return \Illuminate\Mail\Mailables\Content
-     */
-    public function content()
-    {
-        return new Content(
-            view: 'emails.mail_notify',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array
-     */
-    public function attachments()
-    {
-        return $this->content;
-    }
+    
 }
