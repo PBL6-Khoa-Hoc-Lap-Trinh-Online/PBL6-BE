@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestAddReceiverAddress;
+use App\Http\Requests\RequestUserUpdateAddress;
 use App\Models\ReceiverAddress;
 use App\Services\ReceiverAddressService;
 use Illuminate\Http\Request;
@@ -21,5 +22,9 @@ class ReceiverAddressController extends Controller
     public function getAddress(Request $request,$id)
     {
         return $this->receiverAddressService->getAddress($request,$id);
+    }
+    public function update(RequestUserUpdateAddress $request,$id)
+    {
+        return $this->receiverAddressService->update($request,$id);
     }
 }

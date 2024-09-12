@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestAddReceiverAddress;
+use App\Http\Requests\RequestUserUpdateAddress;
 use App\Models\ReceiverAddress;
 use App\Models\User;
 use App\Repositories\ReceiverAddressInterface;
@@ -48,6 +49,25 @@ class ReceiverAddressService
             }
         }
         catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function update(RequestUserUpdateAddress $request,$id){
+        DB::beginTransaction();
+        try{
+            $user_id = auth('user_api')->user()->user_id;
+            $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
+            if($receiver_address){
+                $receiver_address->update($request->all());
+                DB::commit();
+                return $this->responseSuccessWithData($receiver_address,'Cập nhật địa chỉ nhận hàng thành công!', 200);
+            }
+            else{
+                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
+            }
+        }
+        catch(Throwable $e){
+            DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }

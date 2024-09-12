@@ -39,6 +39,7 @@ Route::prefix('receiver-address')->controller(ReceiverAddressController::class)-
     Route::middleware('check.auth:user_api')->group(function () {
         Route::post('add', 'add');
         Route::get('{id}', 'getAddress');
+        Route::post('update/{id}', 'update');
     });
 });
 

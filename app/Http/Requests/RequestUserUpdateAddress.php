@@ -5,8 +5,7 @@ namespace App\Http\Requests;
 use App\Traits\APIResponse;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-
-class RequestAddReceiverAddress extends FormRequest
+class RequestUserUpdateAddress extends FormRequest
 {
     use APIResponse;
     /**
@@ -27,9 +26,9 @@ class RequestAddReceiverAddress extends FormRequest
     public function rules()
     {
         return [
-            'receiver_name'=>'required|string',
-            'receiver_phone'=>'required|digits:10|numeric',
-            'receiver_address'=>'required|string',
+            'receiver_name' => 'string',
+            'receiver_phone' => 'digits:10|numeric',
+            'receiver_address' => 'string',
         ];
     }
     public function failedValidation(Validator $validator)
