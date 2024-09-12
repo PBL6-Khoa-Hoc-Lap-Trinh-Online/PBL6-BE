@@ -119,4 +119,14 @@ class AdminService {
             return $this->responseError($e->getMessage(), 400);
         }
     }
+
+    public function logout()
+    {
+        try {
+            auth('admin_api')->logout();
+            return $this->responseSuccess('Đăng xuất thành công!');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

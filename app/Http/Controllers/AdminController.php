@@ -28,4 +28,7 @@ class AdminController extends Controller
     {
         return $this->adminService->resetPassword($request);
     }
+    public function logout(Request $request){
+        return $this->adminService->logout($request);
+    }
 }
