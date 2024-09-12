@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Traits\APIResponse;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-class RequestForgotPassword extends FormRequest
+class RequestChangePassword extends FormRequest
 {
     use APIResponse;
     /**
@@ -26,7 +26,8 @@ class RequestForgotPassword extends FormRequest
     public function rules()
     {
         return [
-            'email' => 'required|string|email|max:100',
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:6|confirmed|different:current_password',
         ];
     }
     public function failedValidation(Validator $validator)

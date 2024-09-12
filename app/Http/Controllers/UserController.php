@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RequestChangePassword;
 use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
@@ -47,5 +48,8 @@ class UserController extends Controller
     }
     public function updateProfile(RequestUpdateProfileUser $request){
         return $this->userService->updateProfile($request);
+    }
+    public function changePassword(RequestChangePassword $request){
+        return $this->userService->changePassword($request);
     }
 }

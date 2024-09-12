@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserEnum;
+use App\Http\Requests\RequestChangePassword;
 use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
@@ -244,6 +245,24 @@ class UserService
 
             DB::commit();
             return $this->responseSuccessWithData($user, "Cập nhật thông tin tài khoản thành công!");
+        }
+        catch(Throwable $e){
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
+        }
+    }
+    public function changePassword(RequestChangePassword $request){
+        DB::beginTransaction();
+        try{
+            $id_user = auth('user_api')->user()->user_id;
+            $user = User::find($id_user);
+            if(!(Hash::check($request->current_password, $user->password))){
+                return $this->responseError('Mật khẩu hiện tại không chính xác!');
+            }
+            $data = ['password' => Hash::make($request->new_password)];
+            $user->update($data);
+            DB::commit();
+            return $this->responseSuccess('Thay đổi mật khẩu thành công!');
         }
         catch(Throwable $e){
             DB::rollback();
