@@ -5,6 +5,8 @@ namespace App\Http\Requests;
 use App\Traits\APIResponse;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class RequestUpdateProfileUser extends FormRequest
 {
@@ -26,8 +28,10 @@ class RequestUpdateProfileUser extends FormRequest
      */
     public function rules()
     {
+        $id_user=Auth::guard('user_api')->user()->user_id;
         return [
-            'user_fullname' =>'string|between:2,60',
+            'email' => ['required','string','email','max:100',Rule::unique('users')->ignore($id_user,'user_id')],
+            'user_fullname' =>'required|string|between:2,60',
             'user_phone' => 'digits:10|numeric',
             'user_birthday' =>'date',
             'user_gender'=>'in:1,0',

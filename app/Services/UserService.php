@@ -9,6 +9,7 @@ use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileUser;
 use App\Http\Requests\RequestUserRegister;
 use App\Jobs\SendForgotPassword;
+use App\Jobs\SendMailNotify;
 use App\Jobs\SendVerifyEmail;
 use App\Models\PasswordReset;
 use App\Models\User;
@@ -202,6 +203,7 @@ class UserService
         try{
             $id_user = auth('user_api')->user()->user_id;
             $user = User::find($id_user);
+            $email_user = $user->email; 
             if($request->hasFile('user_avatar')){
                 $image = $request->file('user_avatar');
                 $uploadFile = Cloudinary::upload($image->getRealPath(), [
@@ -223,6 +225,23 @@ class UserService
                 $request['user_avatar'] = $user->user_avatar;
                 $user->update($request->all());
             }
+            //check update email
+            if($email_user != $request->email){
+                $token = Str::random(32);
+                $url = UserEnum::VERIFY_MAIL_USER . $token;
+                Log::info("Thêm jobs vào hàng đợi, Email:$request->email, with url: $url");
+                Queue::push(new SendVerifyEmail($request->email, $url));
+                $content= 'Email của bạn đã được thay đổi thành '.$user->email. '.';
+                Queue::push(new SendMailNotify($email_user, $content));
+                $data = [
+                    'token_verify_email' => $token,
+                    'email_verified_at' => null,
+                ];
+                $user->update($data);
+                DB::commit();
+                return $this->responseSuccessWithData($user, 'Cập nhật thông tin tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 200);
+            }
+
             DB::commit();
             return $this->responseSuccessWithData($user, "Cập nhật thông tin tài khoản thành công!");
         }
