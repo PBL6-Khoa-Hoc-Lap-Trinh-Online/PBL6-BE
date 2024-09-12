@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,11 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
         Route::get('profile', 'profile');
         Route::post('update-profile', 'updateProfile');
         Route::post('change-password', 'changePassword');
+    });
+});
+Route::prefix('receiver-address')->controller(ReceiverAddressController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('add', 'add');
     });
 });
 

@@ -7,5 +7,5 @@ namespace App\Repositories;
  */
 interface UserInterface extends RepositoryInterface
 {
-    // public static function updateUser($id, $data);
+    
 }
