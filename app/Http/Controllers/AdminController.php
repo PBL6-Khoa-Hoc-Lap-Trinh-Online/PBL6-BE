@@ -31,4 +31,7 @@ class AdminController extends Controller
     public function logout(Request $request){
         return $this->adminService->logout($request);
     }
+    public function profile(Request $request){
+        return $this->adminService->profile($request);
+    }
 }

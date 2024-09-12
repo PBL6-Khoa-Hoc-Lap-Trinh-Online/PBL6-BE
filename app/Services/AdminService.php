@@ -129,4 +129,12 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+    public function profile(){
+        try {
+            $admin = auth('admin_api')->user();
+            return $this->responseSuccessWithData($admin,'Lấy thông tin quản trị viên thành công');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
