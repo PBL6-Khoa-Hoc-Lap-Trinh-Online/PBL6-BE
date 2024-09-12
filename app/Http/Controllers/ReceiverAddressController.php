@@ -18,4 +18,8 @@ class ReceiverAddressController extends Controller
     {
         return $this->receiverAddressService->add($request);
     }
+    public function getAddress(Request $request,$id)
+    {
+        return $this->receiverAddressService->getAddress($request,$id);
+    }
 }

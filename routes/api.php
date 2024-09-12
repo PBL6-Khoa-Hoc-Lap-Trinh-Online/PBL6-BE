@@ -38,6 +38,7 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
 Route::prefix('receiver-address')->controller(ReceiverAddressController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
         Route::post('add', 'add');
+        Route::get('{id}', 'getAddress');
     });
 });
 
