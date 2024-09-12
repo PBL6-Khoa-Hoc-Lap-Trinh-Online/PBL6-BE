@@ -67,4 +67,56 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function forgotPassword(RequestForgotPassword $request)
+    {
+        DB::beginTransaction();
+        try {
+            $email = $request->email;
+            $admin = Admin::where('email', $email)->first();
+            if (empty($admin)) {
+                DB::rollback();
+                return $this->responseError('Email không tồn tại trong hệ thống!');
+            }
+            $token = Str::random(32);
+            PasswordReset::create([
+                'email' => $request->email,
+                'token' => $token,
+            ]);
+            $url = AdminEnum::FORGOT_PASSWORD_ADMIN . $token;
+            Log::info("Add jobs to Queue, Email:$email with URL: $url");
+            Queue::push(new SendForgotPassword($email, $url));
+            DB::commit();
+            return $this->responseSuccess('Link form đặt lại mật khẩu đã được gửi tới email của Bạn!');
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
+        }
+    }
+
+    public function resetPassword(RequestResetPassword $request)
+    {
+        DB::beginTransaction();
+        try {
+            $token = $request->token ?? '';
+            $newPassword = $request->new_password;
+            $passwordReset = PasswordReset::where('token', $token)->first();
+            if ($passwordReset) {
+                $admin = Admin::where('email', $passwordReset->email)->first();
+                $data = [
+                    'password' => Hash::make($newPassword),
+                ];
+                $admin->update($data);
+                $passwordReset->delete();
+                DB::commit();
+                return $this->responseSuccess('Đặt lại mật khẩu thành công!');
+            } else {
+                DB::rollback();
+                return $this->responseError('Token đã hết hạn!', 400);
+            }
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
+        }
+    }
 }

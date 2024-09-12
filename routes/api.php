@@ -45,5 +45,8 @@ Route::middleware('auth:sanctum')->get('/admin', function (Request $request) {
 
 Route::prefix('admin')->controller(AdminController::class)->group(function (){
     Route::post('login','login');
+    Route::post('forgot-password', 'forgotPassword');
+    Route::post('reset-password', 'resetPassword');
+    
 });
 
