@@ -40,6 +40,7 @@ Route::prefix('receiver-address')->controller(ReceiverAddressController::class)-
         Route::post('add', 'add');
         Route::get('{id}', 'getAddress');
         Route::post('update/{id}', 'update');
+        Route::get('', 'getAll');
     });
 });
 

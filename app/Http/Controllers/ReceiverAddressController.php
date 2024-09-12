@@ -27,4 +27,8 @@ class ReceiverAddressController extends Controller
     {
         return $this->receiverAddressService->update($request,$id);
     }
+    public function getAll(Request $request)
+    {
+        return $this->receiverAddressService->getAll($request);
+    }
 }

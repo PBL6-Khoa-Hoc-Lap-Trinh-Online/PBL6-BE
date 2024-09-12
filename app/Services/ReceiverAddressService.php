@@ -71,5 +71,18 @@ class ReceiverAddressService
             return $this->responseError($e->getMessage());
         }
     }
+    public function getAll(Request $request){
+        try{
+            $user_id = auth('user_api')->user()->user_id;
+            $user= User::find($user_id);
+            if($user){
+                $receiver_address = ReceiverAddress::where('user_id',$user_id)->get();
+                return $this->responseSuccessWithData($receiver_address,'Lấy tất cả địa chỉ nhận hàng thành công!', 200);
+            }
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 
 }
