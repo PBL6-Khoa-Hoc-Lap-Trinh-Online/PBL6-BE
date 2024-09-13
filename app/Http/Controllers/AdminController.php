@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestResetPassword;
+use App\Http\Requests\RequestUpdateProfileAdmin;
 
 use App\Services\AdminService;
 
@@ -33,5 +34,8 @@ class AdminController extends Controller
     }
     public function profile(Request $request){
         return $this->adminService->profile($request);
+    }
+    public function updateProfile(RequestUpdateProfileAdmin $request){
+        return $this->adminService->updateProfile($request);
     }
 }

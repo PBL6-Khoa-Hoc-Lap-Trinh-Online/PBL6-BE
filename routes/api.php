@@ -50,7 +50,8 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     Route::middleware('check.auth:admin_api')->group(function(){
         Route::get('logout', 'logout');
         Route::get('profile', 'profile');
-
+        Route::post('update-profile', 'updateProfile');
+        
     });
 });
 

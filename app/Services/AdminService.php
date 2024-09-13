@@ -2,26 +2,33 @@
 
 namespace App\Services;
 
-use App\Http\Requests\RequestLogin;
+use App\Enums\AdminEnum;
+
 use App\Traits\APIResponse;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
-use App\Repositories\AdminInterface;
-use App\Enums\AdminEnum;
-use App\Http\Requests\RequestForgotPassword;
-use App\Http\Requests\RequestResetPassword;
-
-use App\Http\Requests\RequestUserRegister;
-use App\Jobs\SendForgotPassword;
-use App\Jobs\SendVerifyEmail;
-use App\Models\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 
+use App\Repositories\AdminInterface;
+
+use App\Http\Requests\RequestLogin;
+use App\Http\Requests\RequestForgotPassword;
+use App\Http\Requests\RequestResetPassword;
+use App\Http\Requests\RequestUpdateProfileAdmin;
+use App\Http\Requests\RequestUserRegister;
+
+use App\Jobs\SendForgotPassword;
+use App\Jobs\SendVerifyEmail;
+use App\Jobs\SendMailNotify;
+
 use App\Models\Admin;
+use App\Models\PasswordReset;
+
 
 use Throwable;
 
@@ -137,4 +144,63 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function updateProfile(RequestUpdateProfileAdmin $request){
+        DB::beginTransaction();
+        try {
+            $id_admin = auth('admin_api')->user()->admin_id;
+            $admin = Admin::find($id_admin);
+            // $email_admin = $admin->email; 
+            
+            if ($request->hasFile('admin_avatar')) {
+                $image = $request->file('admin_avatar');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/avatar/admin',
+                    'resource_type' => 'auto',
+                ]);
+                $url = $uploadFile->getSecurePath();
+                
+                if ($admin->admin_avatar) {
+                    $parsedUrl = pathinfo($admin->admin_avatar);
+                    $id_file = $parsedUrl['filename'];  // Lấy phần tên file mà không bao gồm phần mở rộng
+                    
+                    // Xóa tệp từ Cloudinary
+                    Cloudinary::destroy($id_file);
+                }
+                
+                $data = array_merge($request->all(), ['admin_avatar' => $url]);
+                $admin->update($data);
+            } else {
+                $request['admin_avatar'] = $admin->admin_avatar;
+                $admin->update($request->all());
+            }
+
+            // Check update email
+            // if ($email_admin != $request->email) {
+            //     $token = Str::random(32);
+            //     $url = AdminEnum::VERIFY_MAIL_ADMIN . $token;
+            //     Log::info("Thêm jobs vào hàng đợi, Email:$request->email, with url: $url");
+            //     Queue::push(new SendVerifyEmail($request->email, $url));
+                
+            //     $content = 'Email của bạn đã được thay đổi thành ' . $admin->email . '.';
+            //     Queue::push(new SendMailNotify($email_admin, $content));
+                
+            //     $data = [
+            //         'token_verify_email' => $token,
+            //         'email_verified_at' => null,
+            //     ];
+            //     $admin->update($data);
+            //     DB::commit();
+                
+            //     return $this->responseSuccessWithData($admin, 'Cập nhật thông tin tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 200);
+            // }
+
+            DB::commit();
+            return $this->responseSuccessWithData($admin, "Cập nhật thông tin tài khoản thành công!");
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
+        }
+    }
+
 }
