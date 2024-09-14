@@ -66,6 +66,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         Route::get('profile', 'profile');
         Route::post('update-profile', 'updateProfile');
         Route::post('change-password', 'changePassword');
+        Route::get('manage-users', 'manageUsers');
     });
 });
 
