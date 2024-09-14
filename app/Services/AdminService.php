@@ -28,6 +28,7 @@ use App\Jobs\SendVerifyEmail;
 use App\Jobs\SendMailNotify;
 
 use App\Models\Admin;
+use App\Models\User;
 use App\Models\PasswordReset;
 
 
@@ -220,6 +221,20 @@ class AdminService {
         catch(Throwable $e){
             DB::rollback();
             return $this->responseError($e->getMessage(), 400);
+        }
+    }
+
+    public function manageUsers(Request $request){
+        try {
+            $users = User::all();
+    
+            if ($users->isEmpty()) {
+                return $this->responseError('Không có người dùng nào trong hệ thống!');
+            }
+
+            return $this->responseSuccessWithData($users, 'Danh sách người dùng được lấy thành công!');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
         }
     }
 
