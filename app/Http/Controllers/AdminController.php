@@ -42,4 +42,7 @@ class AdminController extends Controller
     public function changePassword(RequestChangePassword $request){
         return $this->adminService->changePassword($request);
     }
+    public function manageUsers(Request $request){
+        return $this->adminService->manageUsers($request);
+    }
 }
