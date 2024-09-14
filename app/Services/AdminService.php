@@ -21,6 +21,7 @@ use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileAdmin;
 use App\Http\Requests\RequestUserRegister;
+use App\Http\Requests\RequestChangePassword;
 
 use App\Jobs\SendForgotPassword;
 use App\Jobs\SendVerifyEmail;
@@ -198,6 +199,25 @@ class AdminService {
             DB::commit();
             return $this->responseSuccessWithData($admin, "Cập nhật thông tin tài khoản thành công!");
         } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage(), 400);
+        }
+    }
+
+    public function changePassword(RequestChangePassword $request){
+        DB::beginTransaction();
+        try{
+            $id_admin = auth('admin_api')->user()->admin_id;
+            $admin = Admin::find($id_admin);
+            if(!(Hash::check($request->current_password, $admin->password))){
+                return $this->responseError('Mật khẩu hiện tại không chính xác!');
+            }
+            $data = ['password' => Hash::make($request->new_password)];
+            $admin->update($data);
+            DB::commit();
+            return $this->responseSuccess('Thay đổi mật khẩu thành công!');
+        }
+        catch(Throwable $e){
             DB::rollback();
             return $this->responseError($e->getMessage(), 400);
         }
