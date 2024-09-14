@@ -226,8 +226,8 @@ class AdminService {
 
     public function manageUsers(Request $request){
         try {
-            $users = User::all();
-    
+            // $users = User::all();
+            $users = User::paginate(20);
             if ($users->isEmpty()) {
                 return $this->responseError('Không có người dùng nào trong hệ thống!');
             }
