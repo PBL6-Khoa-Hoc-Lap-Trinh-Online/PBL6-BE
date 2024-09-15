@@ -19,4 +19,7 @@ class BrandController extends Controller
     public function update(RequestUpdateBrand $request,$id){
          return $this->brandService->update($request,$id);
     }
+    public function get(Request $request,$id){
+        return $this->brandService->get($request, $id);
+    }
 }

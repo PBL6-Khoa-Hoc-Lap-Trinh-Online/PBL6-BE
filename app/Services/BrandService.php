@@ -9,6 +9,7 @@ use App\Repositories\BrandInterface;
 use Throwable;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class BrandService{
@@ -79,6 +80,15 @@ class BrandService{
         catch(Throwable $e){
             DB::rollBack();
             Log::error("Update failed: " . $e->getMessage());
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function get(Request $request,$id){
+        try{
+            $brand = Brand::where("brand_id", $id)->first();
+            return $this->responseSuccessWithData($brand, "Lấy thông tin brand thành công!",200);
+        }
+        catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
     }
