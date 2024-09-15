@@ -133,8 +133,7 @@ return [
     | for possible values.
     |
     */
-    'algo' => env('JWT_ALGO', Tymon\JWTAuth\Providers\JWT\Provider::ALGO_HS256),
-    // 'algo' => env('JWT_ALGO', 'HS256'),
+    'algo' => env('JWT_ALGO', 'HS256'),
 
     /*
     |--------------------------------------------------------------------------
