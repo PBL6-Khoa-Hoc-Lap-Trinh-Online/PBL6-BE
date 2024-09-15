@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestCreateBrand;
+use App\Http\Requests\RequestDeleteBrand;
 use App\Http\Requests\RequestUpdateBrand;
 use App\Services\BrandService;
 use Illuminate\Http\Request;
@@ -21,5 +22,8 @@ class BrandController extends Controller
     }
     public function get(Request $request,$id){
         return $this->brandService->get($request, $id);
+    }
+    public function delete(RequestDeleteBrand $request,$id){
+        return $this->brandService->delete($request, $id);
     }
 }

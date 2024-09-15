@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestCreateBrand;
+use App\Http\Requests\RequestDeleteBrand;
 use App\Http\Requests\RequestUpdateBrand;
 use App\Models\Brand;
 use App\Repositories\BrandInterface;
@@ -86,10 +87,29 @@ class BrandService{
     public function get(Request $request,$id){
         try{
             $brand = Brand::where("brand_id", $id)->first();
+            if(empty($brand)){
+                return $this->responseError("Không tìm thấy brand",404);
+            }
             return $this->responseSuccessWithData($brand, "Lấy thông tin brand thành công!",200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
+        }
+    }
+    public function delete(RequestDeleteBrand $request, $id){
+        DB::beginTransaction();
+        try{
+            $brand = Brand::where("brand_id", $id)->first();
+            if(empty($brand)){
+                return $this->responseError("Không tìm thấy brand",404);
+            }
+            $brand->update(['brand_is_delete' =>$request->brand_is_delete]);
+            DB::commit();
+            return $this->responseSuccessWithData($brand, "Thay đổi trạng thái xoá của brand thành công!");
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e);
         }
     }
     

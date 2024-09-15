@@ -73,5 +73,6 @@ Route::prefix('brand')->controller(BrandController::class)->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::get('{id}', 'get');
+        Route::delete('{id}', 'delete');
     });
 });
