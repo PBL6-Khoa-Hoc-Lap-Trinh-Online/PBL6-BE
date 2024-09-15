@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
@@ -65,3 +66,10 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     });
 });
 
+
+//brand
+Route::prefix('brand')->controller(BrandController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+    });
+});

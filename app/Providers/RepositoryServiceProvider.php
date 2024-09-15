@@ -8,6 +8,8 @@ use App\Repositories\UserInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\AdminInterface;
 use App\Repositories\AdminRepository;
+use App\Repositories\BrandInterface;
+use App\Repositories\BrandRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -23,6 +25,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(AdminInterface::class, AdminRepository::class);
 
         $this->app->bind(ReceiverAddressInterface::class, ReceiverAddressRepository::class);
+        $this->app->bind(BrandInterface::class, BrandRepository::class);
     }
 
     /**
