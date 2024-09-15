@@ -7,6 +7,7 @@ use App\Http\Requests\RequestDeleteBrand;
 use App\Http\Requests\RequestUpdateBrand;
 use App\Models\Brand;
 use App\Repositories\BrandInterface;
+use App\Repositories\BrandRepository;
 use Throwable;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -110,6 +111,49 @@ class BrandService{
         catch(Throwable $e){
             DB::rollBack();
             return $this->responseError($e);
+        }
+    }
+    public function getAll(Request $request){
+        try{
+            $orderBy = $request->typesort ?? 'brand_id';
+            switch($orderBy){
+                case 'brand_name':
+                    $orderBy = 'brand_name';
+                    break;
+                case 'new':
+                    $orderBy = "brand_id";
+                    break;
+                default:
+                    $orderBy = 'brand_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch($orderDirection){
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'brand_is_delete' => $request->brand_is_delete ?? 'all',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $brands = BrandRepository::getAll($filter);
+            if(!(empty($request->paginate))){
+                $brands = $brands->paginate($request->paginate);
+            }
+            else{
+                $brands = $brands->get();
+            }
+
+            return $this->responseSuccessWithData($brands, "Lấy danh sách brand thành công!");
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
         }
     }
     

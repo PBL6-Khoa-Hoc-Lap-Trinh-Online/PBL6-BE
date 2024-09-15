@@ -26,4 +26,7 @@ class BrandController extends Controller
     public function delete(RequestDeleteBrand $request,$id){
         return $this->brandService->delete($request, $id);
     }
+    public function getAll(Request $request){
+        return $this->brandService->getAll($request);
+    }
 }
