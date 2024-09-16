@@ -84,5 +84,6 @@ Route::prefix('suppliers')->controller(SupplierController::class)->group(functio
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
+        Route::get('{id}', 'get');
     });
 });

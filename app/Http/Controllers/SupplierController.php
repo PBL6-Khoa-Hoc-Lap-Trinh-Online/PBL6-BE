@@ -21,5 +21,7 @@ class SupplierController extends Controller
     public function update(RequestUpdateSupplier $request,$id){
          return $this->supplierService->update($request,$id);
     }
-
+    public function get(Request $request,$id){
+        return $this->supplierService->get($request, $id);
+    }
 }

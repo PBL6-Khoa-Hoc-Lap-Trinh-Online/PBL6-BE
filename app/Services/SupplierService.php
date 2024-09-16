@@ -42,4 +42,16 @@ class SupplierService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function get($request,$id){
+        try{
+            $supplier = Supplier::where("supplier_id", $id)->first();
+            if(empty($supplier)){
+                return $this->responseError("Nhà cung cấp không tồn tại", 404);
+            }
+            return $this->responseSuccessWithData($supplier, "Lấy thông tin nhà cung cấp thành công!!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
