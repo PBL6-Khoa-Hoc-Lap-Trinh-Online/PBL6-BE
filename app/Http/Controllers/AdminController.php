@@ -48,4 +48,7 @@ class AdminController extends Controller
     public function manageAdmins(Request $request){
         return $this->adminService->manageAdmins($request);
     }
+    public function changeRole(Request $request){
+        return $this->adminService->changeRole($request);
+    }
 }
