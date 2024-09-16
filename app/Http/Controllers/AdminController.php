@@ -54,4 +54,7 @@ class AdminController extends Controller
     public function changeBlock(Request $request){
         return $this->adminService->changeBlock($request);
     }
+    public function deleteUser(Request $request){
+        return $this->adminService->deleteUser($request);
+    }
 }
