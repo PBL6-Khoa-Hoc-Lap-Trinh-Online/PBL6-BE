@@ -85,5 +85,6 @@ Route::prefix('suppliers')->controller(SupplierController::class)->group(functio
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::get('{id}', 'get');
+        Route::delete('{id}', 'delete');
     });
 });

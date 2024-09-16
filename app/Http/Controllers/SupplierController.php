@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestCreateSupplier;
+use App\Http\Requests\RequestDeleteSupplier;
 use App\Http\Requests\RequestUpdateSupplier;
 use App\Models\Supplier;
 
@@ -23,5 +24,8 @@ class SupplierController extends Controller
     }
     public function get(Request $request,$id){
         return $this->supplierService->get($request, $id);
+    }
+    public function delete(RequestDeleteSupplier $request,$id){
+        return $this->supplierService->delete($request, $id);
     }
 }

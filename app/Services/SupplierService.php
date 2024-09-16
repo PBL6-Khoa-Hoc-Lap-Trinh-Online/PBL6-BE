@@ -1,6 +1,7 @@
 <?php 
 namespace App\Services;
 use App\Http\Requests\RequestCreateSupplier;
+use App\Http\Requests\RequestDeleteSupplier;
 use App\Http\Requests\RequestUpdateSupplier;
 use App\Models\Supplier;
 use App\Repositories\SupplierInterface;
@@ -51,6 +52,22 @@ class SupplierService{
             return $this->responseSuccessWithData($supplier, "Lấy thông tin nhà cung cấp thành công!!",200);
         }
         catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function delete(RequestDeleteSupplier $request,$id){
+        DB::beginTransaction();
+        try{
+            $supplier = Supplier::where("supplier_id", $id)->first();
+            if(empty($supplier)){
+                return $this->responseError("Nhà cung cấp không tồn tại", 404);
+            }
+            $supplier->update(['supplier_is_delete' => $request->supplier_is_delete]);
+            DB::commit();
+            return $this->responseSuccess("Thay đổi trạng thái xoá nhà cung cấp thành công!!",200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }
