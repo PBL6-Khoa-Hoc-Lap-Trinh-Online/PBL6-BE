@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RequestUpdateCategory;
 use App\Http\Requests\RequestCreateCategory;
 use App\Services\CategoryService;
 use Illuminate\Http\Request;
@@ -14,5 +15,8 @@ class CategoryController extends Controller
     }
     public function add(RequestCreateCategory $request){
         return $this->categoryService->add($request);
+    }
+    public function update(RequestUpdateCategory $request, $id){
+         return $this->categoryService->update($request, $id);
     }
 }
