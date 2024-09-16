@@ -70,6 +70,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
             Route::get('manage-admins', 'manageAdmins');
             Route::post('change-role/{id}', 'changeRole');
         }); 
+        Route::post('change-block/{id}', 'changeBlock');
     });
 });
 
