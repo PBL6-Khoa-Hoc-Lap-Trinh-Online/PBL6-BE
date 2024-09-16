@@ -66,6 +66,9 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         Route::post('update-profile', 'updateProfile');
         Route::post('change-password', 'changePassword');
         Route::get('manage-users', 'manageUsers');
+        Route::middleware('check.superadmin')->group(function(){
+            Route::get('manage-admins', 'manageAdmins');
+        }); 
     });
 });
 
