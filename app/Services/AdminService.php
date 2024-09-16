@@ -300,4 +300,27 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function deleteUser(Request $request){
+        DB::beginTransaction();
+        try {
+            $user_id = $request->route('id');
+            $user = User::find($user_id);
+
+            if (empty($user)) {
+                return $this->resonserError('Người dùng không tồn tại!');
+            }
+
+            $status_delete = ! $user->user_is_delete;
+            $new_delete = ['user_is_delete' => $status_delete];   
+            $user->update($new_delete);
+            DB::commit(); 
+            
+            $status = ($status_delete==0) ? 'được khôi phục' : 'xóa';
+            return $this->responseSuccess("Tài khoản người dùng đã $status thành công!");
+        } catch (Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+
+    }
 }
