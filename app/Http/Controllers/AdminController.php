@@ -51,4 +51,7 @@ class AdminController extends Controller
     public function changeRole(Request $request){
         return $this->adminService->changeRole($request);
     }
+    public function changeBlock(Request $request){
+        return $this->adminService->changeBlock($request);
+    }
 }
