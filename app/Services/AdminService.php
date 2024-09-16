@@ -250,4 +250,30 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function changeRole(Request $request){
+        DB::beginTransaction();
+        try {
+            $id_change = $request->route('id');
+            $admin_change = Admin::find($id_change);
+
+            if (empty($admin_change)){
+                return $this->responseError('Quản trị viên không tồn tại');
+            }
+
+            $currentAdminId = auth('admin_api')->user()->admin_id;
+            if ($currentAdminId == $admin_change->admin_id) {
+                DB::rollback();
+                return $this->responseError('Bạn không thể thay đổi vai trò của chính mình!', 403);
+            }
+
+            $new_role = ['admin_is_admin' => ! $admin_change->admin_is_admin];
+            $admin_change->update($new_role);
+
+            DB::commit();
+            return $this->responseSuccess('Cập nhật vai trò quản trị viên thành công!');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

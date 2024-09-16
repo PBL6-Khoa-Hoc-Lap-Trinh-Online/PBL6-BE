@@ -68,6 +68,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         Route::get('manage-users', 'manageUsers');
         Route::middleware('check.superadmin')->group(function(){
             Route::get('manage-admins', 'manageAdmins');
+            Route::post('change-role/{id}', 'changeRole');
         }); 
     });
 });
