@@ -96,5 +96,6 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}','update');
+        Route::post('delete/{id}', 'delete');
     });
 });

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RequestDeleteCategory;
 use App\Http\Requests\RequestUpdateCategory;
 use App\Http\Requests\RequestCreateCategory;
+
 use App\Services\CategoryService;
 use Illuminate\Http\Request;
 
@@ -18,5 +20,8 @@ class CategoryController extends Controller
     }
     public function update(RequestUpdateCategory $request, $id){
          return $this->categoryService->update($request, $id);
+    }
+    public function delete(RequestDeleteCategory $request, $id){
+        return $this->categoryService->delete($request, $id);
     }
 }

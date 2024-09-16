@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Http\Requests\RequestDeleteCategory;
 use App\Http\Requests\RequestUpdateCategory;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
@@ -67,6 +68,22 @@ class CategoryService{
             return $this->responseSuccessWithData($category, 'Cập nhật category thành công!', 200);
         }
         catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function delete(RequestDeleteCategory $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $category = Category::where("category_id", $id)->first();
+            if (empty($category)) {
+                return $this->responseError("Không tìm thấy category", 404);
+            }
+            $category->update(['category_is_delete'=> $request->category_is_delete]);
+            DB::commit();
+            return $this->responseSuccessWithData($category, "Thay đổi trạng thái xoá category thành công!",200);
+        } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
         }
