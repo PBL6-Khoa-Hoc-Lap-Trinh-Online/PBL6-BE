@@ -238,4 +238,16 @@ class AdminService {
         }
     }
 
+    public function manageAdmins(Request $request){
+        try {
+            $admins = Admin::paginate(20);
+            if ($admins->isEmpty()) {
+                return $this->responseError('Không có quản trị viên nào trong hệ thống!');
+            }
+    
+            return $this->responseSuccessWithData($admins, 'Danh sách quản trị viên được lấy thành công!');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
