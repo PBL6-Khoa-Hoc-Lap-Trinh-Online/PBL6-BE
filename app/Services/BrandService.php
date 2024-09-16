@@ -106,7 +106,8 @@ class BrandService{
             }
             $brand->update(['brand_is_delete' =>$request->brand_is_delete]);
             DB::commit();
-            return $this->responseSuccessWithData($brand, "Thay đổi trạng thái xoá của brand thành công!");
+            $request->brand_is_delete == 1 ? $message = "Xoá brand thành công!" : $message = "Khôi phục brand thành công!";
+            return $this->responseSuccess( $message,200);
         }
         catch(Throwable $e){
             DB::rollBack();

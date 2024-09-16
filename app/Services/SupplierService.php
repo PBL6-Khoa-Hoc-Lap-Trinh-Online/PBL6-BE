@@ -66,7 +66,8 @@ class SupplierService{
             }
             $supplier->update(['supplier_is_delete' => $request->supplier_is_delete]);
             DB::commit();
-            return $this->responseSuccess("Thay đổi trạng thái xoá nhà cung cấp thành công!!",200);
+            $request->supplier_is_delete == 1 ? $message = "Xoá nhà cung cấp thành công!!" : $message = "Khôi phục nhà cung cấp thành công!!";
+            return $this->responseSuccess($message, 200);
         }
         catch(Throwable $e){
             DB::rollBack();

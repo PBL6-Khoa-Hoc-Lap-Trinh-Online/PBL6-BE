@@ -2,12 +2,14 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestDeleteCategory;
+use App\Http\Requests\RequestDeleteManyCategory;
 use App\Http\Requests\RequestUpdateCategory;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CategoryInterface;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -82,8 +84,29 @@ class CategoryService{
             }
             $category->update(['category_is_delete'=> $request->category_is_delete]);
             DB::commit();
-            return $this->responseSuccessWithData($category, "Thay đổi trạng thái xoá category thành công!",200);
+            $request->category_is_delete == 1 ? $message = "Xoá category thành công!" : $message = "Khôi phục category thành công!";
+            return $this->responseSuccessWithData($category, $message ,200);
         } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function deleteMany(RequestDeleteManyCategory $request){
+        DB::beginTransaction();
+        try{
+            $ids_category=$request->ids_category;
+            $categories = CategoryRepository::getCategory(['ids_category'=> $ids_category])->get();
+            if($categories->isEmpty()){
+                return $this->responseError("Không tìm thấy category",404);
+            }
+            foreach($categories as $index => $category){
+                $category->update(['category_is_delete'=>$request->category_is_delete]);
+            }
+            DB::commit();
+            $request->category_is_delete == 1 ? $message = "Xoá các category thành công!" : $message = "Khôi phục các category thành công!";
+            return $this->responseSuccess($message,200);
+        }
+        catch(Throwable $e){
             DB::rollBack();
             return $this->responseError($e->getMessage());
         }
