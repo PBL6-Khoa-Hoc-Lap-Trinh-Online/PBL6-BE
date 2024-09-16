@@ -276,4 +276,28 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function changeBlock(Request $request){
+        DB::beginTransaction();
+        try {
+            $user_id = $request->route('id');
+            $user = User::find($user_id);
+
+            if (empty($user)) {
+                return $this->resonserError('Người dùng không tồn tại!');
+            }
+
+            $status_block = ! $user->user_is_block;
+            $new_block = ['user_is_block' => $status_block];   
+            $user->update($new_block);
+            DB::commit(); 
+            
+            $status = ($status_block==0) ? 'được mở khóa' : 'bị khóa';
+            return $this->responseSuccess("Tài khoản người dùng đã $status thành công!");
+
+            
+        } catch (Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
