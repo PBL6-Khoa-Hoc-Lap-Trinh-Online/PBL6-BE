@@ -7,5 +7,5 @@ namespace App\Repositories;
  */
 interface SupplierInterface extends RepositoryInterface
 {
-    
+    public static function getAll($filter);
 }

@@ -28,4 +28,7 @@ class SupplierController extends Controller
     public function delete(RequestDeleteSupplier $request,$id){
         return $this->supplierService->delete($request, $id);
     }
+    public function getAll(Request $request){
+        return $this->supplierService->getAll($request);
+    }
 }
