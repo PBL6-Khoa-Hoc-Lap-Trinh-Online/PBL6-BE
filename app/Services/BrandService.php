@@ -54,9 +54,7 @@ class BrandService{
             }
             if($request->hasFile('brand_logo')){
                 if($brand->brand_logo){
-                    $parsedUrl = pathinfo($brand->brand_logo);
-                    $id_file = $parsedUrl['filename'];  // Lấy phần tên file mà không bao gồm phần mở rộng
-                    // Xóa tệp từ Cloudinary
+                    $id_file = explode('.', implode('/', array_slice(explode('/', $brand->brand_logo), 7)))[0];
                     Cloudinary::destroy($id_file);
                 }
                 $image = $request->file('brand_logo');

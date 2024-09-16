@@ -68,7 +68,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
 
 
 //brand
-Route::prefix('brand')->controller(BrandController::class)->group(function () {
+Route::prefix('brands')->controller(BrandController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
