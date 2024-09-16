@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
@@ -87,5 +88,12 @@ Route::prefix('suppliers')->controller(SupplierController::class)->group(functio
         Route::get('{id}', 'get');
         Route::delete('{id}', 'delete');
         Route::get('', 'getAll');
+    });
+});
+
+//category
+Route::prefix('categories')->controller(CategoryController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
     });
 });
