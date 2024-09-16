@@ -213,9 +213,7 @@ class UserService
                 ]);
                 $url = $uploadFile->getSecurePath();
                 if($user->user_avatar){
-                    $parsedUrl = pathinfo($user->user_avatar);
-                    $id_file = $parsedUrl['filename'];  // Lấy phần tên file mà không bao gồm phần mở rộng
-                    // Xóa tệp từ Cloudinary
+                    $id_file = explode('.', implode('/', array_slice(explode('/', $user->user_avatar), 7)))[0];
                     Cloudinary::destroy($id_file);
                    
                 }
