@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ReceiverAddressController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Route;
@@ -34,5 +39,53 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
         Route::post('change-password', 'changePassword');
     });
 });
+Route::prefix('receiver-address')->controller(ReceiverAddressController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('add', 'add');
+        Route::get('{id}', 'getAddress');
+        Route::post('update/{id}', 'update');
+        Route::get('', 'getAll');
+        Route::delete('delete/{id}', 'delete');
+    });
+});
 
 
+//admin
+Route::middleware('auth:sanctum')->get('/admin', function (Request $request) {
+    return $request->admin();
+});
+
+Route::prefix('admin')->controller(AdminController::class)->group(function (){
+    Route::post('login','login');
+    Route::post('forgot-password', 'forgotPassword');
+    Route::post('reset-password', 'resetPassword');
+    Route::middleware('check.auth:admin_api')->group(function(){
+        Route::get('logout', 'logout');
+        Route::get('profile', 'profile');
+        Route::post('update-profile', 'updateProfile');
+        
+    });
+});
+
+
+//brand
+Route::prefix('brands')->controller(BrandController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+        Route::post('update/{id}', 'update');
+        Route::delete('{id}', 'delete');
+    });
+    Route::get('{id}', 'get');
+    Route::get('', 'getAll');
+});
+
+//supplier
+Route::prefix('suppliers')->controller(SupplierController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+        Route::post('update/{id}', 'update');
+        Route::get('{id}', 'get');
+        Route::delete('{id}', 'delete');
+        Route::get('', 'getAll');
+    });
+});

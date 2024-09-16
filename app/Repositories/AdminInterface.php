@@ -5,7 +5,7 @@ namespace App\Repositories;
 /**
  * Interface ExampleRepository.
  */
-interface UserInterface extends RepositoryInterface
+interface AdminInterface extends RepositoryInterface
 {
     
 }

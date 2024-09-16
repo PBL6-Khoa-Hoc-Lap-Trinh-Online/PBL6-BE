@@ -27,8 +27,8 @@ trait APIResponse
     /**
      * @param mixed $messages
      * @param mixed $data
-     */
-    public function responseSuccessWithData($data, $messages = ['Success !'], int $status = HTTPStatus::HTTP_OK): JsonResponse
+     *///HTTPStatus::HTTP_OK
+    public function responseSuccessWithData($data, $messages = ['Success !'], int $status = 200): JsonResponse
     {
         if (!is_array($messages)) {
             $messages = [$messages];
