@@ -4,12 +4,14 @@ namespace App\Providers;
 
 use App\Repositories\ReceiverAddressInterface;
 use App\Repositories\ReceiverAddressRepository;
+use App\Repositories\SupplierInterface;
 use App\Repositories\UserInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\AdminInterface;
 use App\Repositories\AdminRepository;
 use App\Repositories\BrandInterface;
 use App\Repositories\BrandRepository;
+use App\Repositories\SupplierRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -26,6 +28,7 @@ class RepositoryServiceProvider extends ServiceProvider
 
         $this->app->bind(ReceiverAddressInterface::class, ReceiverAddressRepository::class);
         $this->app->bind(BrandInterface::class, BrandRepository::class);
+        $this->app->bind(SupplierInterface::class, SupplierRepository::class);
     }
 
     /**

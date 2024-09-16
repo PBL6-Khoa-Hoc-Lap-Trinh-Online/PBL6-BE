@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ReceiverAddressController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 
@@ -76,4 +77,11 @@ Route::prefix('brands')->controller(BrandController::class)->group(function () {
     });
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
+});
+
+//supplier
+Route::prefix('suppliers')->controller(SupplierController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+    });
 });
