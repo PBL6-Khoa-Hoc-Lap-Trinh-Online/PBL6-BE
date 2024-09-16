@@ -99,4 +99,5 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
     });
+    Route::get('{id}', 'get');
 });

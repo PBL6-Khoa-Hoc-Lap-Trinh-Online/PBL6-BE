@@ -111,4 +111,20 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function get(Request $request,$id){
+        try{
+            $category = Category::where("category_id", $id)->first();
+            if(empty($category)){
+                return $this->responseError("Không tìm thấy category",404);
+            }
+            $categories = Category::where("category_parent_id", $id)->get();
+            if($categories->isEmpty()){
+                return $this->responseSuccessWithData($category, "Lấy thông tin category thành công!",200);
+            }
+            return $this->responseSuccessWithData($categories, "Lấy danh sách con của category thành công!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

@@ -27,4 +27,7 @@ class CategoryController extends Controller
     public function deleteMany(RequestDeleteManyCategory $request){
         return $this->categoryService->deleteMany($request);
     }
+    public function get(Request $request, $id){
+        return $this->categoryService->get($request, $id);
+    }
 }
