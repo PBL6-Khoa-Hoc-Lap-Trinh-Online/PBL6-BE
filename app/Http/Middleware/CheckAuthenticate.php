@@ -18,7 +18,7 @@ class CheckAuthenticate
                 return $next($request);
             }
         }
-
+        
         // Sử dụng response() để tạo một đối tượng Response thay vì JsonResponse
         return response()->json(['error' => 'Unauthenticated'], 401);
     }
