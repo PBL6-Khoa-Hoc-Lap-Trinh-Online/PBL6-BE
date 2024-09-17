@@ -22,6 +22,7 @@ use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileAdmin;
 use App\Http\Requests\RequestUserRegister;
 use App\Http\Requests\RequestChangePassword;
+use App\Http\Requests\RequestAddAdmin;
 
 use App\Jobs\SendForgotPassword;
 use App\Jobs\SendVerifyEmail;
@@ -322,5 +323,68 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
 
+    }
+
+    public function addAdmin(RequestAddAdmin $request){
+        DB::beginTransaction();
+        try {
+            $admin = Admin::where('email', $request->email)->first();
+            if ($admin) {
+                return $this->responseError('Email đã tồn tại! Vui lòng chọn email khác');
+            }
+
+            $data = [
+                'admin_fullname' => $request->admin_fullname,
+                'email' => $request->email,
+                // 'password' => Hash::make(Str::random(8)),
+                'password' => Str::random(8),
+
+            ];
+            $admin = Admin::create($data);
+
+            $token = Str::random(32);
+            $url = AdminEnum::VERIFY_MAIL_ADMIN . $token;
+            Log::info("Add jobs to Queue, Email:$admin->email, with url: $url");
+            Queue::push(new SendVerifyEmail($admin->email, $url));
+            $data = [
+                'token_verify_email' => $token,
+            ];
+            $admin->update($data);
+            DB::commit();
+            return $this->responseSuccessWithData($admin, 'Thêm tài khoản admin thành công!', 201);
+            
+        } catch (Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function verifyEmail(Request $request){
+        DB::beginTransaction();
+        try {
+            $token = $request->token ?? '';
+
+            $admin = Admin::where('token_verify_email', $token)->first();
+
+            if ($admin) {
+                $content = 'Mật khẩu tài khoản của bạn là:  ' . $admin->password;
+                
+                $data = [
+                    'email_verified_at' => now(),
+                    'token_verify_email' => null,
+                    'password' => Hash::make($admin->password),
+                ];
+                $admin->update($data);
+                DB::commit();
+                Queue::push(new SendMailNotify($admin->email, $content));
+
+                return $this->responseSuccess('Email đã xác thực thành công!');
+            } else {
+                return $this->responseError('Token đã hết hạn!');
+            }
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
     }
 }
