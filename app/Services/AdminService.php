@@ -270,9 +270,9 @@ class AdminService {
 
             $new_role = ['admin_is_admin' => ! $admin_change->admin_is_admin];
             $admin_change->update($new_role);
-
             DB::commit();
-            return $this->responseSuccess('Cập nhật vai trò quản trị viên thành công!');
+            $content = ($admin_change->admin_is_admin == 0) ? 'Admin' : 'SuperAdmin'; 
+            return $this->responseSuccess("Đã cập nhật vai trò quản trị viên thành $content");
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -383,6 +383,41 @@ class AdminService {
                 return $this->responseError('Token đã hết hạn!');
             }
         } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function deleteAdmin(Request $request){
+        DB::beginTransaction();
+        try {
+            $admin_id = $request->route('id');
+            $admin = Admin::find($admin_id);
+
+            if (empty($admin)) {
+                return $this->responseError('Quản trị viên không tồn tại!');
+            }
+
+            $current_admin = auth('admin_api')->user();
+
+            if ($current_admin->admin_id == $admin->admin_id) {
+                DB::rollback();
+                return $this->responseError('Bạn không thể xóa/khôi phục tài khoản chính mình!', 403);
+            }
+
+            if ($current_admin->admin_is_admin <= $admin->admin_is_admin){
+                DB::rollback();
+                return $this->responseError('Chỉ có quyền xóa/khôi phục tài khoản quản trị viên có bậc thấp hơn');
+            }
+
+            $status_delete = ! $admin->admin_is_delete;
+            $new_delete = ['admin_is_delete' => $status_delete];   
+            $admin->update($new_delete);
+            DB::commit(); 
+            
+            $status = ($status_delete==0) ? 'được khôi phục' : 'xóa';
+            return $this->responseSuccess("Quản trị viên đã $status thành công!");
+        } catch (Throwable $e){
             DB::rollback();
             return $this->responseError($e->getMessage());
         }

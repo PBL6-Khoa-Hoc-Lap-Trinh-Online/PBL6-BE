@@ -61,21 +61,29 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     Route::post('login','login');
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
+    Route::post('verify-email', 'verifyEmail');
+    
     Route::middleware('check.auth:admin_api')->group(function(){
         Route::get('logout', 'logout');
         Route::get('profile', 'profile');
         Route::post('update-profile', 'updateProfile');
         Route::post('change-password', 'changePassword');
         Route::get('manage-users', 'manageUsers');
-        Route::middleware('check.superadmin')->group(function(){
-            Route::get('manage-admins', 'manageAdmins');
-            Route::post('change-role/{id}', 'changeRole');
-        }); 
         Route::post('change-block/{id}', 'changeBlock');
         Route::post('delete-user/{id}', 'deleteUser');
-        Route::post('add-admin','addAdmin');
+        
+        Route::middleware('check.role:1,2')->group(function(){
+            Route::get('manage-admins', 'manageAdmins');
+            Route::post('delete-admin/{id}','deleteAdmin');
+                Route::middleware('check.role:2')->group(function(){
+                    Route::post('change-role/{id}', 'changeRole');
+                    Route::post('add-admin','addAdmin');
+                });  	
+            }); 
+
+        
     });
-    Route::post('verify-email', 'verifyEmail');
+    
     
 });
 
