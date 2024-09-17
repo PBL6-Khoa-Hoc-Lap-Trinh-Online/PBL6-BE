@@ -99,5 +99,6 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
     });
-    Route::get('{id}', 'get');
+    Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
+    Route::get('', 'getAll');
 });

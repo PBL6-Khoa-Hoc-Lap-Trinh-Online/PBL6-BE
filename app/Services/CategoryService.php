@@ -11,6 +11,7 @@ use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Termwind\Components\BreakLine;
 use Throwable;
 
 class CategoryService{
@@ -122,6 +123,54 @@ class CategoryService{
                 return $this->responseSuccessWithData($category, "Lấy thông tin category thành công!",200);
             }
             return $this->responseSuccessWithData($categories, "Lấy danh sách con của category thành công!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getAll(Request $request){
+        try{
+            $orderBy = $request->typesort ?? 'category_id';
+            switch($orderBy){
+                case 'category_name':
+                    $orderBy = 'category_name';
+                    break;
+                case 'category_type':
+                    $orderBy = 'category_type';
+                    break;
+                case 'category_parent_id':
+                    $orderBy = 'category_parent_id';
+                    break;
+                case 'category_id':
+                    $orderBy = 'category_id';
+                    break;
+                default:
+                    $orderBy = 'category_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch($orderDirection){
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'category_is_delete' => $request->category_is_delete ?? 'all',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $categories = CategoryRepository::getAll($filter);
+            if(!(empty($request->paginate))){
+                $categories = $categories->paginate($request->paginate);
+            }
+            else{
+                $categories = $categories->get();
+            }
+            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!",200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());

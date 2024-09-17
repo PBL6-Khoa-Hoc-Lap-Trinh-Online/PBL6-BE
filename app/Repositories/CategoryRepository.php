@@ -19,4 +19,22 @@ class CategoryRepository extends BaseRepository implements CategoryInterface{
 
         return $data;
     }
+    public static function getAll($filter){
+        $filter = (object) $filter;
+        $data = (new self)->model
+            ->when(!empty($filter->search), function ($q) use ($filter) {
+                $q->where('category_name', 'LIKE', '%' . $filter->search . '%')
+                    ->orWhere('category_type', 'LIKE', '%' . $filter->search . '%')
+                    ->orWhere('category_description', 'LIKE', '%' . $filter->search . '%');
+            })
+            ->when(isset($filter->category_is_delete), function ($query) use ($filter) {
+                if ($filter->category_is_delete !== 'all') {
+                    $query->where('categories.category_is_delete', $filter->category_is_delete);
+                }
+            })
+            ->when(!empty($filter->orderBy), function ($query) use ($filter) {
+                $query->orderBy($filter->orderBy, $filter->orderDirection);
+            });
+        return $data;
+    }
 }

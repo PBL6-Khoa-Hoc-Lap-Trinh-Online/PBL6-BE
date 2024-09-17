@@ -30,4 +30,7 @@ class CategoryController extends Controller
     public function get(Request $request, $id){
         return $this->categoryService->get($request, $id);
     }
+    public function getAll(Request $request){
+        return $this->categoryService->getAll($request);
+    }
 }
