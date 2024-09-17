@@ -64,4 +64,7 @@ class AdminController extends Controller
     public function verifyEmail(Request $request){
         return $this->adminService->verifyEmail($request);
     }
+    public function deleteAdmin(Request $request){
+        return $this->adminService->deleteAdmin($request);
+    }
 }
