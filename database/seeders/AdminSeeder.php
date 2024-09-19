@@ -21,11 +21,18 @@ class AdminSeeder extends Seeder
             'admin_fullname' => 'Kim Tien Tran',
             'email' => 'kimtientran0410@gmail.com',
             'password' => Hash::make('123456'),
-            'admin_is_admin' => 1,
+            'admin_is_admin' => 2,
             'email_verified_at'=> now()
             ],
             [
-                'admin_fullname' => 'Kim Tien Tran',
+                'admin_fullname' => 'Trần Thị Tuyến',
+                'email' => 'kimtien@yopmail.com',
+                'password' => Hash::make('123456'),
+                'admin_is_admin' => 1,
+                'email_verified_at' => now()
+            ],
+            [
+                'admin_fullname' => 'Lê Thanh Sơn',
                 'email' => 'kimtien@yopmail.com',
                 'password' => Hash::make('123456'),
                 'admin_is_admin' => 0,

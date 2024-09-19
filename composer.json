@@ -12,6 +12,8 @@
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^2.14",
         "laravel/tinker": "^2.7",
+        "league/csv": "^9.16",
+        "maatwebsite/excel": "^3.1",
         "tomfordrumm/jwt-auth": "dev-develop"
     },
     "require-dev": {

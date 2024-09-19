@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
@@ -101,4 +102,14 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
     });
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
     Route::get('', 'getAll');
+});
+
+
+//product
+Route::prefix('products')->controller(ProductController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+       
+    });
+    Route::get('{id}', 'getById');
 });

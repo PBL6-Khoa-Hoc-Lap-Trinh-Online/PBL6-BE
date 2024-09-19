@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\ProductInterface;
+use App\Repositories\ProductRepository;
 use App\Repositories\ReceiverAddressInterface;
 use App\Repositories\ReceiverAddressRepository;
 use App\Repositories\SupplierInterface;
@@ -32,6 +34,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(BrandInterface::class, BrandRepository::class);
         $this->app->bind(SupplierInterface::class, SupplierRepository::class);
         $this->app->bind(CategoryInterface::class, CategoryRepository::class);
+        $this->app->bind(ProductInterface::class, ProductRepository::class);
     }
 
     /**

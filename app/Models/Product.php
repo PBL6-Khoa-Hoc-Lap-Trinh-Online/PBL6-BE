@@ -34,6 +34,9 @@ class Product extends Model
         'product_created_at',
         'product_updated_at',
     ];
+    protected $casts = [
+        'product_images' => 'array',
+    ];
     public function brand(){
         return $this->belongsTo(Brand::class);
     }

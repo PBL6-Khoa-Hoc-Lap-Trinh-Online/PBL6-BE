@@ -38,6 +38,7 @@ class Admin extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'token_verify_email',
     ];
     /**
      * The attributes that should be cast.
