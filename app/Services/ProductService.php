@@ -10,6 +10,7 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use Throwable;
 
 class ProductService{
@@ -49,6 +50,19 @@ class ProductService{
             return $this->responseSuccessWithData($product, 'Thêm sản phẩm mới thành công!', 201);
         } catch (Throwable $e) {
             DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function get(Request $request,$id){
+        try{
+            $product = Product::find($id);
+            if(empty($product)){
+                return $this->responseError("Sản phẩm không tồn tại!",404);
+            }
+            return $this->responseSuccessWithData($product, "Lấy sản phẩm thành công!");
+        }
+        catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
     }

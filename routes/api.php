@@ -111,5 +111,5 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
         Route::post('add', 'add');
        
     });
-    Route::get('{id}', 'getById');
+    Route::get('{id}', 'get');
 });
