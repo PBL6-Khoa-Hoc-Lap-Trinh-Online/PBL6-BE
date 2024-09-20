@@ -32,7 +32,7 @@ class RequestAddProduct extends FormRequest
             'product_name'=>'required|string|max:100',
             'product_price' => ['required', 'numeric', 'bail', 'regex:/^\d+(\.\d{1,2})?$/'],
             'product_images' => ['nullable', 'array',new ProductImage()],
-            'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'product_package'=>'string',
             'product_ingredients'=>'string',
             'product_notes'=>'string',
