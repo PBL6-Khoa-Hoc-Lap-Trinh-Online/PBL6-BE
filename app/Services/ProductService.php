@@ -173,4 +173,109 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
+    //Update when image upload cloudinary
+    public function update(RequestAddProduct $request,$id){
+        DB::beginTransaction();
+        try{
+            $product = Product::find($id);
+            if(empty($product)){
+                return $this->responseError("Sản phẩm không tồn tại!");
+            }
+            $imageUrls = [];
+            if ($request->hasFile('product_images')) {
+                if($product->product_images){
+                    $urlImages = $product->product_images;
+                    foreach ($urlImages as $url) {
+                            $id_file = explode('.', implode('/', array_slice(explode('/', $url), 7)))[0];
+                            Cloudinary::destroy($id_file);
+                        }
+                    }  
+                $files = $request->file('product_images');
+                if (!is_array($files)) {
+                    // Nếu chỉ là một file, chuyển nó thành mảng
+                    $files = [$files];
+                }
+                foreach ($files as $image) {
+                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
+                        'resource_type' => 'auto',
+                    ]);
+                    //Add the url to the array
+                    $imageUrls[] = $uploadFile->getSecurePath();
+                }
+                $data = array_merge($request->all(), ['product_images' => $imageUrls]);
+                $product->update($data);
+            }
+            else{
+                $request['product_images'] = $product->product_images;
+                $product->update($request->all());
+            }
+            DB::commit();
+            return $this->responseSuccessWithData($product, "Cập nhật sản phẩm thành công!");
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    //update when image upload AWS S3
+    public function updateS3(RequestAddProduct $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $product = Product::find($id);
+            if (empty($product)) {
+                return $this->responseError("Sản phẩm không tồn tại!");
+            }
+            $imageUrls = [];
+            if ($request->hasFile('product_images')) {
+                if ($product->product_images) {
+                    // $urlImages=json_decode($product->product_images,true);
+                    $urlImages = $product->product_images;
+                    // Duyệt qua từng URL trong mảng, kể cả nếu chỉ có một phần tử
+                    foreach ($urlImages as $url) {
+                        // Lấy tên file từ URL (ví dụ: 172682205420240819041436-1-P28111_1.jpg)
+                        $key_image = basename($url);
+                        // Xóa file khỏi S3
+                        Storage::disk('s3')->delete('product_image/' . $key_image);
+                    }
+                }
+                $files = $request->file('product_images');
+                if (!is_array($files)) {
+                    // Nếu chỉ là một file, chuyển nó thành mảng
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    $name = time() . $file->getClientOriginalName();
+                    $filePath = 'product_image/' . $name;
+
+                    // Upload file to S3 và gán vào biến riêng $uploadSuccess
+                    $uploadSuccess = Storage::disk('s3')->put($filePath, file_get_contents($file));
+
+                    // Kiểm tra nếu upload thành công
+                    if ($uploadSuccess) {
+                        // Set ACL to public-read
+                        Storage::disk('s3')->setVisibility($filePath, 'public');
+
+                        // Lấy URL của file
+                        $url = Storage::disk('s3')->url($filePath);
+
+                        // Thêm URL vào mảng $imageUrls
+                        $imageUrls[] = $url;
+                    }
+                }
+                $data = array_merge($request->all(), ['product_images' => $imageUrls]);
+                $product->update($data);
+            } else {
+                $request['product_images'] = $product->product_images;
+                $product->update($request->all());
+            }
+            DB::commit();
+            return $this->responseSuccessWithData($product, "Cập nhật sản phẩm thành công!");
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
 }

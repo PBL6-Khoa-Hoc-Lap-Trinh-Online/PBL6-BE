@@ -24,4 +24,10 @@ class ProductController extends Controller
     public function addUploadS3(RequestAddProduct $request){
         return $this->productService->addUploadS3($request);
     }
+    public function update(RequestAddProduct $request, $id){
+        return $this->productService->update($request, $id);
+    }
+    public function updateS3(RequestAddProduct $request,$id){
+        return $this->productService->updateS3($request, $id);
+    }
 }
