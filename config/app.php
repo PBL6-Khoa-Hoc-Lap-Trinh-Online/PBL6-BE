@@ -165,6 +165,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
         CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+        Aws\Laravel\AwsServiceProvider::class,
         /*
          * Package Service Providers...
          */
@@ -196,6 +197,7 @@ return [
         'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::class,
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
+        'AWS' => Aws\Laravel\AwsFacade::class,
     ])->toArray(),
 
 ];

@@ -6,13 +6,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.0",
+        "aws/aws-sdk-php-laravel": "^3.9",
         "cloudinary-labs/cloudinary-laravel": "^2.1",
+        "darkaonline/l5-swagger": "^8.6",
         "fruitcake/laravel-cors": "^2.0.5",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^2.14",
         "laravel/tinker": "^2.7",
         "league/csv": "^9.16",
+        "league/flysystem-aws-s3-v3": "^3.28",
         "maatwebsite/excel": "^3.1",
         "tomfordrumm/jwt-auth": "dev-develop"
     },

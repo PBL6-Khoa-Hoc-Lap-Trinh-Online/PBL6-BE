@@ -18,10 +18,9 @@ class ProductRepository extends BaseRepository implements ProductInterface{
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_uses', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_ingredients', 'LIKE', '%' . $filter->search . '%')
-                        ->orWhere('product_price', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('dosage_form', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_package', 'LIKE', '%' . $filter->search . '%')
-                        ->orWhere('product_specification', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('specification', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_notes', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('place_of_manufacture', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('manufacturer', 'LIKE', '%' . $filter->search . '%')
@@ -31,11 +30,28 @@ class ProductRepository extends BaseRepository implements ProductInterface{
             ->when(!empty($filter->category_name), function ($query) use ($filter) {
                 return $query->where('categories.category_name', '=', $filter->category_name);
             })
-            ->when(!empty($filter->brand_name), function ($query) use ($filter) {
-                return $query->where('brands.brand_name', '=', $filter->brand_name);
+            ->when(!empty($filter->brand_names), function ($query) use ($filter) {
+                return $query->whereIn('brands.brand_name', $filter->brand_names);
+            })
+            ->when(!empty($filter->price_min) || !empty($filter->price_max), function ($query) use ($filter) {
+                if (!empty($filter->price_min) && empty($filter->price_max)) {
+                    return $query->where('product_price', '>=', $filter->price_min);
+                } elseif (empty($filter->price_min) && !empty($filter->price_max)) {
+                    return $query->where('product_price', '<=', $filter->price_max);
+                } else {
+                    return $query->whereBetween('product_price', [$filter->price_min, $filter->price_max]);
+                }
             })
             ->when(!empty($filter->product_price), function ($query) use ($filter) {
-                return $query->whereBetween('product_price', [$filter->price_min,$filter->price_max]);
+                if ($filter->product_price == 'below_100k') {
+                    return $query->where('product_price', '<', 100000);
+                } elseif ($filter->product_price == '100k_300k') {
+                    return $query->whereBetween('product_price', [100000, 300000]);
+                } elseif ($filter->product_price == '300k_500k') {
+                    return $query->whereBetween('product_price', [300000, 500000]);
+                } elseif ($filter->product_price == 'above_500k') {
+                    return $query->where('product_price', '>', 500000);
+                }
             })
             ->when(!empty($filter->orderBy), function ($query) use ($filter) {
                 $query->orderBy($filter->orderBy, $filter->orderDirection);

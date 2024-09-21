@@ -109,7 +109,8 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
 Route::prefix('products')->controller(ProductController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
-       
+        Route::post('add-upload-image-s3', 'addUploadS3');
     });
     Route::get('{id}', 'get');
+    Route::get('', 'getAll');
 });

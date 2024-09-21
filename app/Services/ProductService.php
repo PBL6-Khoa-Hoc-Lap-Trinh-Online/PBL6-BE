@@ -7,10 +7,11 @@ use App\Models\Product;
 use App\Repositories\ProductInterface;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
+
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -61,7 +62,8 @@ class ProductService{
 
     public function get(Request $request,$id){
         try{
-            $product = Product::find($id);
+            // $product = Product::find($id);
+            $product =$this->productRepository->getAll((object)['product_id'=>$id])->first();
             if(empty($product)){
                 return $this->responseError("Sản phẩm không tồn tại!",404);
             }
@@ -107,7 +109,7 @@ class ProductService{
             $filter = (object) [
                 'search' => $request->search ?? '',
                 'category_name' => $request->category_name ?? '',
-                'brand_name' =>$request->brand_name ?? '',
+                'brand_names' =>$request->brand_names ?? [],
                 'product_price'=>$request->product_price ??'',
                 'price_min' =>$request->price_min ?? '',
                 'price_max' =>$request->price_max ?? '',
@@ -115,11 +117,12 @@ class ProductService{
                 'orderDirection' => $orderDirection,
                 'product_is_delete' =>$request->is_delete ?? 'both',
             ];
-            if(!(empty($request->paginate))){
-                $products = $this->productRepository->getAll($filter)->paginate($request->paginate);
+            $products = $this->productRepository->getAll($filter);
+            if(!empty($request->paginate)){
+                $products = $products->paginate($request->paginate);
             }
             else{
-                $products = $this->productRepository->getAll($filter)->get();
+                $products = $products->get();
             }
             return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
         }
