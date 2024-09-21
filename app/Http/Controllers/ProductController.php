@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestAddProduct;
+use App\Http\Requests\RequestDeleteProduct;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -29,5 +30,8 @@ class ProductController extends Controller
     }
     public function updateS3(RequestAddProduct $request,$id){
         return $this->productService->updateS3($request, $id);
+    }
+    public function delete(RequestDeleteProduct $request, $id){
+        return $this->productService->delete($request, $id);
     }
 }

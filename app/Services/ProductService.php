@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestAddProduct;
+use App\Http\Requests\RequestDeleteProduct;
 use App\Jobs\UploadImage;
 use App\Models\Product;
 use App\Repositories\ProductInterface;
@@ -274,6 +275,23 @@ class ProductService{
             return $this->responseSuccessWithData($product, "Cập nhật sản phẩm thành công!");
         } catch (Throwable $e) {
             DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function delete(RequestDeleteProduct $request, $id){
+        DB::beginTransaction();
+        try{
+            $product = Product::find($id);
+            if(empty($product)){
+                return $this->responseError("Sản phẩm không tồn tại!", 404);
+            }
+            $product->update(['product_is_delete' => $request->product_is_delete]);
+            DB::commit();
+            $request->product_is_delete == 1 ? $message = "Xoá sản phẩm thành công!" : $message = "Khôi phục sản phẩm thành công!";
+            return $this->responseSuccess($message, 200);
+        }
+        catch(Throwable $e){
+            DB::rollback();
             return $this->responseError($e->getMessage());
         }
     }

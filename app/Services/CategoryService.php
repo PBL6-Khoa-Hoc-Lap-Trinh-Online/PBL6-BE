@@ -86,7 +86,7 @@ class CategoryService{
             $category->update(['category_is_delete'=> $request->category_is_delete]);
             DB::commit();
             $request->category_is_delete == 1 ? $message = "Xoá category thành công!" : $message = "Khôi phục category thành công!";
-            return $this->responseSuccessWithData($category, $message ,200);
+            return $this->responseSuccess($message ,200);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());

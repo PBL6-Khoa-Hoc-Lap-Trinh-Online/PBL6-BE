@@ -112,6 +112,7 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
         Route::post('add-upload-image-s3', 'addUploadS3');
         Route::post('update/{id}', 'update');
         Route::post('update-s3/{id}', 'updateS3');
+        Route::post('delete/{id}', 'delete');
     });
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
