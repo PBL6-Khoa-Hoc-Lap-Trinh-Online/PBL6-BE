@@ -113,6 +113,7 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
         Route::post('update/{id}', 'update');
         Route::post('update-s3/{id}', 'updateS3');
         Route::post('delete/{id}', 'delete');
+        Route::post('delete-many', 'deleteMany');
     });
     Route::get('{id}', 'get');
     Route::get('', 'getAll');

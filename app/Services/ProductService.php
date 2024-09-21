@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestAddProduct;
+use App\Http\Requests\RequestDeleteManyProduct;
 use App\Http\Requests\RequestDeleteProduct;
 use App\Jobs\UploadImage;
 use App\Models\Product;
@@ -292,6 +293,26 @@ class ProductService{
         }
         catch(Throwable $e){
             DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function deleteMany(RequestDeleteManyProduct $request){
+        DB::beginTransaction();
+        try{
+            $ids_product = $request->ids_product;
+            $products = Product::whereIn('product_id', $ids_product)->get();
+            if($products->isEmpty()){
+                return $this->responseError("Không tìm thấy sản phẩm!");
+            }
+            foreach($products as $index => $product){
+                $product->update(['product_is_delete' => $request->product_is_delete]);
+            }
+            DB::commit();
+            $request->product_is_delete == 1 ? $message = "Xoá các sản phẩm thành công!" : $message = "Khôi phục các sản phẩm thành công!";
+            return $this->responseSuccess($message, 200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }

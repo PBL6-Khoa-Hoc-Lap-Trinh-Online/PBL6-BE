@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestAddProduct;
+use App\Http\Requests\RequestDeleteManyProduct;
 use App\Http\Requests\RequestDeleteProduct;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
@@ -33,5 +34,8 @@ class ProductController extends Controller
     }
     public function delete(RequestDeleteProduct $request, $id){
         return $this->productService->delete($request, $id);
+    }
+    public function deleteMany(RequestDeleteManyProduct $request){
+        return $this->productService->deleteMany($request);
     }
 }
