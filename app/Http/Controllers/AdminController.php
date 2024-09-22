@@ -8,7 +8,8 @@ use App\Http\Requests\RequestForgotPassword;
 use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileAdmin;
 use App\Http\Requests\RequestChangePassword;
- 
+use App\Http\Requests\RequestAddAdmin;
+
 use App\Services\AdminService;
 
 
@@ -56,5 +57,11 @@ class AdminController extends Controller
     }
     public function deleteUser(Request $request){
         return $this->adminService->deleteUser($request);
+    }
+    public function addAdmin(RequestAddAdmin $request){
+        return $this->adminService->addAdmin($request);
+    } 
+    public function verifyEmail(Request $request){
+        return $this->adminService->verifyEmail($request);
     }
 }

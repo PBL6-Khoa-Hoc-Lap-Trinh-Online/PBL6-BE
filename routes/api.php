@@ -73,7 +73,10 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         }); 
         Route::post('change-block/{id}', 'changeBlock');
         Route::post('delete-user/{id}', 'deleteUser');
+        Route::post('add-admin','addAdmin');
     });
+    Route::post('verify-email', 'verifyEmail');
+    
 });
 
 
