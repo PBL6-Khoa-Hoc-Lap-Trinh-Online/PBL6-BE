@@ -16,6 +16,7 @@ class CartDetail extends Model
         'cart_quantity',
         'cart_price',
     ];
+    public $timestamps = false;
     public function cart(){
         return $this->belongsTo(Cart::class);
     }

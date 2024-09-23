@@ -9,6 +9,7 @@ class ImportDetail extends Model
 {
     use HasFactory;
     protected $primaryKey = 'import_detail_id';
+    public $timestamps = false;
     protected $fillable = [
         'import_detail_id',
         'import_id',
@@ -24,4 +25,5 @@ class ImportDetail extends Model
     public function product(){
         return $this->belongsTo(Product::class);
     }
+    
 }

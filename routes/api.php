@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
@@ -135,4 +136,12 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
     });
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
+});
+
+
+//Import
+Route::prefix('imports')->controller(ImportController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+    });
 });
