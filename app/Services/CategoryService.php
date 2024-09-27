@@ -112,22 +112,6 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
-    public function get(Request $request,$id){
-        try{
-            $category = Category::where("category_id", $id)->first();
-            if(empty($category)){
-                return $this->responseError("Không tìm thấy category",404);
-            }
-            $categories = Category::where("category_parent_id", $id)->get();
-            if($categories->isEmpty()){
-                return $this->responseSuccessWithData($category, "Lấy thông tin category thành công!",200);
-            }
-            return $this->responseSuccessWithData($categories, "Lấy danh sách con của category thành công!",200);
-        }
-        catch(Throwable $e){
-            return $this->responseError($e->getMessage());
-        }
-    }
     public function getAll(Request $request){
         try{
             $orderBy = $request->typesort ?? 'category_id';
@@ -176,4 +160,62 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function getCategories(Request $request, $id = null)
+    {
+        try {
+            // If an ID is provided, retrieve the specific category and its children
+            if ($id !== null) {
+                $category = Category::where("category_id", $id)->first();
+
+                if (empty($category)) {
+                    return $this->responseError("Không tìm thấy category", 404);
+                }
+                $categoryTree = $this->buildCategoryTree($category);
+                return $this->responseSuccessWithData($categoryTree, "Lấy thông tin cây category thành công!", 200);
+            }
+            else{
+                $categories = Category::whereNull('category_parent_id')->get();
+                $categoryTree = [];
+                foreach ($categories as $category) {
+                    $categoryTree[] = $this->buildCategoryTree($category);
+                }
+                return $this->responseSuccessWithData($categoryTree, "Lấy danh sách category thành công!", 200);
+            }
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    /**
+     * Đệ quy xây dựng cây danh mục.
+     * 
+     * @param Category $category
+     * @return array
+     */
+    private function buildCategoryTree($category)
+    {
+        // Lấy các danh mục con của danh mục hiện tại
+        $children = Category::where("category_parent_id", $category->category_id)->get();
+
+        // Xây dựng mảng cho danh mục hiện tại
+        $categoryTree = [
+            'category_id' => $category->category_id,
+            'category_name' => $category->category_name,
+            'category_type' => $category->category_type,
+            'category_thumbnail' => $category->category_thumbnail,
+            'category_description' => $category->category_description,
+            'category_parent_id' => $category->category_parent_id,
+            'category_is_delete' => $category->category_is_delete,
+            'children' => []
+        ];
+
+        // Đệ quy để thêm các danh mục con
+        foreach ($children as $child) {
+            $categoryTree['children'][] = $this->buildCategoryTree($child);
+        }
+
+        return $categoryTree;
+    }
+
 }

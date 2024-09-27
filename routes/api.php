@@ -118,9 +118,10 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('update/{id}','update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
+        Route::get('get-all-admin', 'getAll');
     });
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
-    Route::get('', 'getAll');
+    Route::get('', 'getAllCategories');
 });
 
 
@@ -143,5 +144,6 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
 Route::prefix('imports')->controller(ImportController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
+        Route::get('', 'getAll');
     });
 });
