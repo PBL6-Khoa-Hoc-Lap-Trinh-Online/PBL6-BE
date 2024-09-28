@@ -29,4 +29,7 @@ class BrandController extends Controller
     public function getAll(Request $request){
         return $this->brandService->getAll($request);
     }
+    public function getNameBrand(Request $request){
+        return $this->brandService->getNameBrand($request);
+    }
 }
