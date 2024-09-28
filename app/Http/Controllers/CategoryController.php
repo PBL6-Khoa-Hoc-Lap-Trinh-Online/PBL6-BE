@@ -36,5 +36,7 @@ class CategoryController extends Controller
     public function getAllCategories(Request $request){
         return $this->categoryService->getCategories($request);
     }
-   
+    public function getNameCategory(Request $request){
+        return $this->categoryService->getNameCategory($request);
+    }
 }
