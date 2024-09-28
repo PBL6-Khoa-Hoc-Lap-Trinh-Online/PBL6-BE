@@ -31,4 +31,7 @@ class SupplierController extends Controller
     public function getAll(Request $request){
         return $this->supplierService->getAll($request);
     }
+    public function getNameSupplier(Request $request){
+        return $this->supplierService->getNameSupplier($request);
+    }
 }
