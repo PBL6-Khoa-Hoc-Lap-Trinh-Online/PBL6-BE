@@ -124,4 +124,13 @@ class SupplierService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getNameSupplier(Request $request){
+        try{
+            $suppliers = Supplier::where('supplier_is_delete',0)->select('supplier_id','supplier_name')->get();
+            return $this->responseSuccessWithData($suppliers, "Lấy danh sách nhà cung cấp thành công!");
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

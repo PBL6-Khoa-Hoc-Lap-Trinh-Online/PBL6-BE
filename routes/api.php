@@ -96,6 +96,7 @@ Route::prefix('brands')->controller(BrandController::class)->group(function () {
         Route::post('update/{id}', 'update');
         Route::delete('{id}', 'delete');
     });
+    Route::get('names', 'getNameBrand');
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
 });
@@ -105,6 +106,7 @@ Route::prefix('suppliers')->controller(SupplierController::class)->group(functio
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
+        Route::get('names', 'getNameSupplier');
         Route::get('{id}', 'get');
         Route::delete('{id}', 'delete');
         Route::get('', 'getAll');
@@ -120,8 +122,10 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('delete-many', 'deleteMany');
         Route::get('get-all-admin', 'getAll');
     });
+    Route::get('names', 'getNameCategory');
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
     Route::get('', 'getAllCategories');
+    
 });
 
 
@@ -129,12 +133,11 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
 Route::prefix('products')->controller(ProductController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
-        Route::post('add-upload-image-s3', 'addUploadS3');
         Route::post('update/{id}', 'update');
-        Route::post('update-s3/{id}', 'updateS3');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
     });
+    Route::get('names', 'getNameProduct');
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
 });
@@ -144,6 +147,7 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
 Route::prefix('imports')->controller(ImportController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
+        Route::get('{id}', 'getImportDetails');
         Route::get('', 'getAll');
     });
 });

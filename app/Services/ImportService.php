@@ -4,8 +4,7 @@ namespace App\Services;
 use App\Http\Requests\RequestAddImport;
 use App\Models\Import;
 use App\Models\ImportDetail;
-use App\Models\Order;
-use App\Models\OrderDetail;
+use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Repositories\ImportInterface;
 use App\Traits\APIResponse;
@@ -56,6 +55,73 @@ class ImportService{
         }
         catch(Throwable $e){
             DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getAll(Request $equest){
+        try{
+            $orderBy = $request->typesort ?? 'import_id';
+            switch($orderBy){
+                case 'supplier_name':
+                    $orderbBy = 'supplier_name';
+                    break;
+                case 'import_total_amount':
+                    $orderBy = 'import_total_amount';
+                    break;
+                case 'import_id':
+                    $orderBy = 'import_id';
+                    break;
+                default:
+                    $orderBy = 'import_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch($orderDirection){
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'supplier_name'=> $request->supplier_name ?? '',
+                'import_date'=> $request->import_date ?? 'all',
+                'from_date'=> $request->from_date ?? '',
+                'to_date' => $request->to_date ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $imports = $this->importRepository->getAll($filter);
+            if(!empty($request->paginate)){
+                $imports = $imports->paginate($request->paginate);
+            }
+            else{
+                $imports = $imports->get();
+            }
+            return $this->responseSuccessWithData($imports, "Lấy danh sách nhập kho thành công!", 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getImportDetails(Request $request,$id){
+        try{
+            $import = Import::find($id);
+            if(empty($import)){
+                return $this->responseError('Không tìm thấy phiếu nhập kho này!');
+            }
+            // $importDetails =ImportDetail::where('import_id',$id)->get();
+            // dd($importDetails);
+            $importDetails=$this->importRepository->getImportDetails($id);
+            $data = [
+                'import' => $import,
+                'import_details' => $importDetails,
+            ];
+            return $this->responseSuccessWithData($data, "Lấy danh sách chi tiết nhập kho thành công!", 200);
+        }
+        catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
     }
