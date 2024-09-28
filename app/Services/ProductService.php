@@ -23,45 +23,6 @@ class ProductService{
     public function __construct(ProductInterface $productRepository){
         $this->productRepository = $productRepository;
     }
-    public function add(RequestAddProduct $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->all();
-            $imageUrls = [];
-            set_time_limit(500);
-            if ($request->hasFile('product_images')) {
-                $files = $request->file('product_images');
-                if (!is_array($files)) {
-                    // Nếu chỉ là một file, chuyển nó thành mảng
-                    $files = [$files];
-                }
-                foreach ($files as $image) {
-                    //upload image to cloudinary
-                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
-                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
-                        'resource_type' => 'auto',
-                        // 'upload_preset' => 'product_image',
-                        //  'timeout'=>300,
-                        
-                    ]);
-                    //Add the url to the array
-                    $imageUrls[] = $uploadFile->getSecurePath();
-                }
-                $data['product_images'] = $imageUrls;
-                // $data['product_images'] = json_encode($imageUrls, JSON_UNESCAPED_SLASHES);
-                
-                // dd($data);
-            }
-            $product = Product::create($data);
-            DB::commit();
-            return $this->responseSuccessWithData($product, 'Thêm sản phẩm mới thành công!', 201);
-        } catch (Throwable $e) {
-            DB::rollBack();
-            return $this->responseError($e->getMessage());
-        }
-    }
-
     public function get(Request $request,$id){
         try{
             // $product = Product::find($id);
@@ -132,7 +93,7 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
-    public function addUploadS3(RequestAddProduct $request){
+    public function add(RequestAddProduct $request){
         DB::beginTransaction();
         try{
             $data = $request->all();
@@ -175,53 +136,8 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
-    //Update when image upload cloudinary
-    public function update(RequestAddProduct $request,$id){
-        DB::beginTransaction();
-        try{
-            $product = Product::find($id);
-            if(empty($product)){
-                return $this->responseError("Sản phẩm không tồn tại!");
-            }
-            $imageUrls = [];
-            if ($request->hasFile('product_images')) {
-                if($product->product_images){
-                    $urlImages = $product->product_images;
-                    foreach ($urlImages as $url) {
-                            $id_file = explode('.', implode('/', array_slice(explode('/', $url), 7)))[0];
-                            Cloudinary::destroy($id_file);
-                        }
-                    }  
-                $files = $request->file('product_images');
-                if (!is_array($files)) {
-                    // Nếu chỉ là một file, chuyển nó thành mảng
-                    $files = [$files];
-                }
-                foreach ($files as $image) {
-                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
-                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
-                        'resource_type' => 'auto',
-                    ]);
-                    //Add the url to the array
-                    $imageUrls[] = $uploadFile->getSecurePath();
-                }
-                $data = array_merge($request->all(), ['product_images' => $imageUrls]);
-                $product->update($data);
-            }
-            else{
-                $request['product_images'] = $product->product_images;
-                $product->update($request->all());
-            }
-            DB::commit();
-            return $this->responseSuccessWithData($product, "Cập nhật sản phẩm thành công!");
-        }
-        catch(Throwable $e){
-            DB::rollBack();
-            return $this->responseError($e->getMessage());
-        }
-    }
     //update when image upload AWS S3
-    public function updateS3(RequestAddProduct $request, $id)
+    public function update(RequestAddProduct $request, $id)
     {
         DB::beginTransaction();
         try {
@@ -316,5 +232,16 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getNameProduct(Request $request){
+        try{
+            $products = Product::where('product_is_delete','0')->select('product_id','product_name')->get();
+            return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+  
 
 }

@@ -16,6 +16,8 @@ class ProductRepository extends BaseRepository implements ProductInterface{
             ->when(!empty($filter->search), function ($q) use ($filter) {
                 $q->where(function ($query) use ($filter) {
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('category_name','LIKE', '%' . $filter->search . '%')
+                        ->orWhere('brand_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_uses', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_ingredients', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('dosage_form', 'LIKE', '%' . $filter->search . '%')

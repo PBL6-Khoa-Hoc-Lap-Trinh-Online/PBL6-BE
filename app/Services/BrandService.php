@@ -155,5 +155,14 @@ class BrandService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getNameBrand(Request $request){
+        try{
+            $brands = Brand::where('brand_is_delete',0)->select('brand_id','brand_name')->get();
+            return $this->responseSuccessWithData($brands, "Lấy danh sách brand thành công!");
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
     
 }

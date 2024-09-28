@@ -160,6 +160,15 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getNameCategory(Request $request){
+        try{
+            $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name')->get();
+            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 
     public function getCategories(Request $request, $id = null)
     {
