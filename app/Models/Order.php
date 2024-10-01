@@ -15,16 +15,11 @@ class Order extends Model
         'order_id',
         'user_id',
         'receiver_address_id',
+        'payment_id',
+        'delivery_id',
         'order_total_amount',
-        'payment_method',
         'order_status',
         'order_note',
-        'order_at',
-        'confirmed_at',
-        'shipped_at',
-        'delivered_at',
-        'cancelled_at',
-        'order_is_delete',
         'order_created_at',
         'order_updated_at',
     ];
@@ -36,5 +31,11 @@ class Order extends Model
     }
     public function orderDetails(){
         return $this->hasMany(OrderDetail::class);
+    }
+    public function delivery(){
+        return $this->belongsTo(Delivery::class);
+    }
+    public function payment(){
+        return $this->belongsTo(Payment::class);
     }
 }
