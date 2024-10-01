@@ -23,6 +23,10 @@ use App\Repositories\BrandRepository;
 use App\Repositories\SupplierRepository;
 use App\Repositories\CategoryRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repositories\CartInterface;
+use App\Repositories\CartRepository;
+use App\Repositories\CartDetailInterface;
+use App\Repositories\CartDetailRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -43,6 +47,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ProductInterface::class, ProductRepository::class);
         $this->app->bind(ImportInterface::class,ImportRepository::class);
         $this->app->bind(ImportDetailInterface::class,ImportDetailRepository::class);
+        $this->app->bind(CartInterface::class, CartRepository::class);
+        $this->app->bind(CartDetailInterface::class, CartDetailRepository::class);
+
     }
 
     /**

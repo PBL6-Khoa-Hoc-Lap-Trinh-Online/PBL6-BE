@@ -8,6 +8,8 @@ use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartDetailController;
 
 use Illuminate\Http\Request;
 
@@ -120,7 +122,7 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('update/{id}','update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
-        Route::get('get-all-admin', 'getAll');
+        Route::get('2', 'getAll');
     });
     Route::get('names', 'getNameCategory');
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
@@ -149,5 +151,25 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
         Route::post('add', 'add');
         Route::get('{id}', 'getImportDetails');
         Route::get('', 'getAll');
+    });
+});
+
+
+//Cart
+Route::prefix('cart')->controller(CartController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('/', 'get');
+    });
+});
+
+//CartDetail
+Route::prefix('cart-detail')->controller(CartDetailController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('/', 'get');
+        Route::post('add', 'add');
+        Route::post('update', 'update');
+        Route::post('delete/{id}', 'delete');
+        Route::post('delete-many', 'deleteMany');
+        
     });
 });
