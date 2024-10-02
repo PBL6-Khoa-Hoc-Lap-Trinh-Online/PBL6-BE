@@ -27,8 +27,8 @@ class RequestDeleteManyCartDetail extends FormRequest
     public function rules()
     {
         return [
-            'ids_cartdetail' => 'required|array|min:1',
-            'ids_cartdetail.*' => 'required|integer',
+            'ids_cart' => 'required|array|min:1',
+            'ids_cart.*' => 'required|integer',
         ];
     }
     public function failedValidation(Validator $validator)

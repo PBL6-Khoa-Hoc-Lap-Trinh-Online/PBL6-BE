@@ -159,17 +159,22 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
 Route::prefix('cart')->controller(CartController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
         Route::get('/', 'get');
-    });
-});
-
-//CartDetail
-Route::prefix('cart-detail')->controller(CartDetailController::class)->group(function () {
-    Route::middleware('check.auth:user_api')->group(function () {
         Route::get('/', 'get');
         Route::post('add', 'add');
         Route::post('update', 'update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
-        
     });
 });
+
+//CartDetail
+// Route::prefix('cart-detail')->controller(CartDetailController::class)->group(function () {
+//     Route::middleware('check.auth:user_api')->group(function () {
+//         Route::get('/', 'get');
+//         Route::post('add', 'add');
+//         Route::post('update', 'update');
+//         Route::post('delete/{id}', 'delete');
+//         Route::post('delete-many', 'deleteMany');
+        
+//     });
+// });

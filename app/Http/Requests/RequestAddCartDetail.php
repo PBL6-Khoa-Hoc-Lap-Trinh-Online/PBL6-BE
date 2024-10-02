@@ -30,7 +30,7 @@ class RequestAddCartDetail extends FormRequest
     public function rules()
     {
         return [
-            'cart_id' => 'required|exists:carts,cart_id',
+            // 'cart_id' => 'required|exists:carts,cart_id',
             'product_id' => 'required|exists:products,product_id',
             'cart_quantity' => 'required|integer|min:1',
             // 'cart_price' => ['required', 'numeric', 'bail', 'regex:/^\d+(\.\d{1,2})?$/'],
@@ -57,8 +57,8 @@ class RequestAddCartDetail extends FormRequest
     public function messages()
     {
         return [
-            'cart_id.required' => 'Cart ID is required',
-            'cart_id.exists' => 'Cart ID must exist in the carts table',
+            // 'cart_id.required' => 'Cart ID is required',
+            // 'cart_id.exists' => 'Cart ID must exist in the carts table',
             'product_id.required' => 'Product ID is required',
             'product_id.exists' => 'Product ID must exist in the products table',
             'cart_quantity.required' => 'Quantity of the product is required',
