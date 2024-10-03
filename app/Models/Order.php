@@ -20,6 +20,9 @@ class Order extends Model
         'order_total_amount',
         'order_status',
         'order_note',
+        'delivery_tracking_number',
+        'payment_status',
+        'delivery_shipped_at',
         'order_created_at',
         'order_updated_at',
     ];

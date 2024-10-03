@@ -23,8 +23,10 @@ return new class extends Migration
             $table->enum('order_status',['pending','confirmed','shipped','delivered','cancelled'])->default('pending');
             $table->enum('payment_status', ['unpaid', 'paid', 'refunded'])->default('unpaid');
             $table->string('order_note')->nullable();
+            $table->string('delivery_tracking_number')->nullable();
             $table->timestamp('order_created_at')->nullable();
             $table->timestamp('order_updated_at')->nullable();
+            $table->timestamp('delivery_shipped_at')->nullable();
             $table->foreign('user_id')->references('user_id')->on('users');
             $table->foreign('receiver_address_id')->references('receiver_address_id')->on('receiver_addresses');
             $table->foreign('payment_id')->references('payment_id')->on('payments');
