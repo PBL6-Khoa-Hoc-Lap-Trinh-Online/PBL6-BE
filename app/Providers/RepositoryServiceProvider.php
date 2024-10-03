@@ -8,6 +8,7 @@ use App\Repositories\ImportDetailInterface;
 use App\Repositories\ImportDetailRepository;
 use App\Repositories\ImportInterface;
 use App\Repositories\ImportRepository;
+use App\Repositories\OrderRepository;
 use App\Repositories\ProductInterface;
 use App\Repositories\ProductRepository;
 use App\Repositories\ReceiverAddressInterface;
@@ -22,6 +23,7 @@ use App\Repositories\BrandInterface;
 use App\Repositories\BrandRepository;
 use App\Repositories\SupplierRepository;
 use App\Repositories\CategoryRepository;
+use App\Repositories\OrderInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -43,6 +45,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ProductInterface::class, ProductRepository::class);
         $this->app->bind(ImportInterface::class,ImportRepository::class);
         $this->app->bind(ImportDetailInterface::class,ImportDetailRepository::class);
+        $this->app->bind(OrderInterface::class, OrderRepository::class);
     }
 
     /**

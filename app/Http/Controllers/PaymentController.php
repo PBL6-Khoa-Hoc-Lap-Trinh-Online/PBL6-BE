@@ -17,4 +17,12 @@ class PaymentController extends Controller
         return $this->paymentService->getAll($request);
 
     }
+    public function createVnPayPayment(Request $request)
+    {
+        return $this->paymentService->createVnPayPayment($request);
+    }
+    public function vnPayReturn(Request $request)
+    {
+        return $this->paymentService->vnPayReturn($request);
+    }
 }

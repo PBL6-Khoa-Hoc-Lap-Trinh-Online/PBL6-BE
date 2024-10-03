@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Delivery;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -41,5 +42,8 @@ class DeliverysSeeder extends Seeder
                 "delivery_fee" => 25000
             ]
         ];
+        foreach($data as $index => $delivery){
+            Delivery::create($delivery);
+        }
     }
 }

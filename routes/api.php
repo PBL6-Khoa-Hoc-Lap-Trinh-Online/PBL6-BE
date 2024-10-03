@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
@@ -150,4 +153,26 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
         Route::get('{id}', 'getImportDetails');
         Route::get('', 'getAll');
     });
+});
+
+
+//user order
+Route::prefix('orders')->controller(OrderController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('buy-now', 'buyNow');
+    });
+});
+
+//payment
+Route::prefix('payments')->controller(PaymentController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('vnpay', 'createVnPayPayment');
+        Route::get('vnpay-return', 'vnpayReturn');
+    });
+    Route::get('', 'getAll');
+});
+
+//delivery
+Route::prefix('deliveries')->controller(DeliveryController::class)->group(function () {
+    Route::get('', 'getAll');
 });
