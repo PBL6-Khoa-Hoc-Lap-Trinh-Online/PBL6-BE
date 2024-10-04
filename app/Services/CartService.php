@@ -45,7 +45,7 @@ class CartService
                     $cartProducts[] = [
                         'cart_id' => $cart -> cart_id,
                         'cart_quantity' => $cart -> cart_quantity,
-                        'cart_price' => $product -> cart_price,
+                        'cart_price' => $product -> product_price,
                         'product_id' => $product -> product_id,
                         'product_name' => $product -> product_name,
                         'product_images' => $product -> product_images,

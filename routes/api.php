@@ -37,6 +37,7 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
+    Route::post('resend-verify-email', 'resendVerifyEmail');
     Route::middleware('check.auth:user_api')->group(function () {
         Route::get('logout', 'logout');
         Route::get('profile', 'profile');
@@ -65,6 +66,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
     Route::post('verify-email', 'verifyEmail');
+    Route::post('resend-verify-email', 'resendVerifyEmail');
     
     Route::middleware('check.auth:admin_api')->group(function(){
         Route::get('logout', 'logout');
