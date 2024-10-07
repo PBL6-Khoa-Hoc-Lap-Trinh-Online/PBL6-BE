@@ -160,6 +160,7 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
 Route::prefix('orders')->controller(OrderController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
         Route::post('buy-now', 'buyNow');
+        Route::post('checkout-cart', 'checkoutCart');
     });
 });
 

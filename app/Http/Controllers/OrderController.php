@@ -15,4 +15,7 @@ class OrderController extends Controller
     public function buyNow(Request $request){
         return $this->orderService->buyNow($request);
     }
+    public function checkoutCart(Request $request){
+        return $this->orderService->checkoutCart($request);
+    }
 }
