@@ -21,63 +21,40 @@ class OrderService{
     public function __construct(OrderInterface $orderRepository){
         $this->orderRepository = $orderRepository;
     }
-    public function buyNow(RequestUserBuyProduct $request){
-        DB::beginTransaction();
+    public function buyNow(Request $request){
         try{
+            $product = Product::find($request->product_id);
             $user = auth('user_api')->user();
-            if(empty($user)){
-                return $this->responseError('User not found!',404);
+            if(empty($product)){
+                return $this->responseError('Product not found!',404);
             }
+            if($product->product_quantity < $request->quantity){
+                return $this->responseError('Số lượng sản phẩm trong kho không đủ!',400);
+            }
+            $total_amount=$product->product_price*$request->quantity;
             $data = [
-                'user_id' => auth('user_api')->user()->user_id,
+                'user_id' => $user->user_id,
                 'receiver_address_id' => $request->receiver_address_id,
                 'payment_id' => $request->payment_id,
                 'delivery_id' => $request->delivery_id,
-                'order_details' => $request->order_details,
-                'order_total_amount' => 0,
+                'order_total_amount' => $total_amount,
             ];
-
-            $order = Order::create($data);
-            $orderTotal = 0;
-            $orderDetails = [];
-            foreach($request->order_details as $orderDetail){
-                $product = Product::find($orderDetail['product_id']);
-                $productPrice = $product->product_price;
-                $product_price_discount = $product->product_price_discount == null ? 0.0 : $product->product_price_discount;
-                if($product->product_quantity < $orderDetail['order_quantity']){
-                    return $this->responseError('Số lượng sản phẩm trong kho không đủ!');
-                }
-                if($product_price_discount != 0.0){
-                    $productPrice = $product_price_discount;
-                }
-                $totalProduct = $orderDetail['order_quantity'] * $productPrice;
-                // dd($totalProduct);
-                $detail = [
-                    'order_id' => $order->order_id,
-                    'product_id' => $orderDetail['product_id'],
-                    'order_quantity' => $orderDetail['order_quantity'],
-                    'order_price' => $productPrice,
-                    'order_price_discount' => $product_price_discount,
-                    'order_total_price' =>  $totalProduct
-                ];
-                $order_detail = OrderDetail::create($detail);
-                $orderTotal += $detail['order_total_price'];
-                $orderDetails[] = $order_detail;
-                $product->update([
-                    'product_quantity' => $product->product_quantity - $orderDetail['order_quantity'],
-                    'product_sold' => $product->product_sold + $orderDetail['order_quantity'],
-                ]);
-            }
-            $delivery = Delivery::find($request->delivery_id);
-            $orderTotal += $delivery->delivery_fee;
-            $order->update(['order_total_amount' => $orderTotal]);
-            //sau khi nhấn mua hàng thì số lượng sản phẩm trong giỏ hàng sẽ bị xóa hết
-            // DB::table('carts')->where('user_id',auth()->user()->id)->delete();
-
-            DB::commit();
+            $order = $this->orderRepository->create($data);
+            $detail = [
+                'order_id' => $order->order_id,
+                'product_id' => $product->product_id,
+                'order_quantity' => $request->quantity,
+                'order_price' => $product->product_price,
+                'order_total_price' => $product->product_price*$request->quantity,
+            ];
+            $order_detail = OrderDetail::create($detail);
+            $product->update([
+                'product_quantity' => $product->product_quantity - $request->quantity,
+                'product_sold' => $product->product_sold + $request->quantity,
+            ]);
             $data = [
                 'order' => $order,
-                'order_details' => $orderDetails,
+                'order_detail' => $order_detail,
             ];
             $email_user = $user->email;
             //Send email notify
@@ -102,34 +79,29 @@ class OrderService{
                 </tr>
                 <tr>
                     <th colspan="2">Chi tiết đơn hàng</th>
-                </tr>';
-
-                    foreach ($orderDetails as $detail) {
-                        $content .= '
+                </tr>
                 <tr>
                     <td>Mã sản phẩm</td>
-                    <td>' . $detail->product_id . '</td>
+                    <td>' . $order_detail->product_id . '</td>
                 </tr>
                 <tr>
                     <td>Số lượng</td>
-                    <td>' . $detail->order_quantity . '</td>
+                    <td>' . $order_detail->order_quantity . '</td>
                 </tr>
                 <tr>
                     <td>Giá</td>
-                    <td>' . number_format($detail->order_price, 0, ',', '.') . ' VND</td>
+                    <td>' . number_format($order_detail->order_price, 0, ',', '.') . ' VND</td>
                 </tr>
                 <tr>
                     <td>Tổng giá</td>
-                    <td>' . number_format($detail->order_total_price, 0, ',', '.') . ' VND</td>
-                </tr>';
-                    }
-
-            $content .= '</table>';
+                    <td>' . number_format($order_detail->order_total_price, 0, ',', '.') . ' VND</td>
+                </tr>
+            </table>';
             Queue::push(new SendMailNotify($email_user, $content));
-            return $this->responseSuccessWithData($data,'Order successfully!',200);
+            DB::commit();
+            return $this->responseSuccessWithData($data,'Đặt hàng thành công!',200);
         }
         catch(Throwable $e){
-            DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }
