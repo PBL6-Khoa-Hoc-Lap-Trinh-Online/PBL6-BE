@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestUserBuyProduct;
+use App\Jobs\SendMailNotify;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderDetail;
@@ -10,6 +11,8 @@ use App\Repositories\OrderInterface;
 use App\Traits\APIResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Throwable;
 
 class OrderService{
@@ -21,6 +24,10 @@ class OrderService{
     public function buyNow(RequestUserBuyProduct $request){
         DB::beginTransaction();
         try{
+            $user = auth('user_api')->user();
+            if(empty($user)){
+                return $this->responseError('User not found!',404);
+            }
             $data = [
                 'user_id' => auth('user_api')->user()->user_id,
                 'receiver_address_id' => $request->receiver_address_id,
@@ -72,7 +79,53 @@ class OrderService{
                 'order' => $order,
                 'order_details' => $orderDetails,
             ];
+            $email_user = $user->email;
+            //Send email notify
+            Log::info("Thêm jobs vào hàng đợi, Email:$email_user");
+            $content = '
+            <p>Đặt hàng thành công! Đơn hàng của bạn là:</p>
+            <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                <tr>
+                    <th colspan="2">Thông tin đơn hàng</th>
+                </tr>
+                <tr>
+                    <td>Mã đơn hàng</td>
+                    <td>' . $order->order_id . '</td>
+                </tr>
+                <tr>
+                    <td>Tổng tiền</td>
+                    <td>' . number_format($order->order_total_amount, 0, ',', '.') . ' VND</td>
+                </tr>
+                <tr>
+                    <td>Ngày tạo</td>
+                    <td>' . $order->order_created_at . '</td>
+                </tr>
+                <tr>
+                    <th colspan="2">Chi tiết đơn hàng</th>
+                </tr>';
 
+                    foreach ($orderDetails as $detail) {
+                        $content .= '
+                <tr>
+                    <td>Mã sản phẩm</td>
+                    <td>' . $detail->product_id . '</td>
+                </tr>
+                <tr>
+                    <td>Số lượng</td>
+                    <td>' . $detail->order_quantity . '</td>
+                </tr>
+                <tr>
+                    <td>Giá</td>
+                    <td>' . number_format($detail->order_price, 0, ',', '.') . ' VND</td>
+                </tr>
+                <tr>
+                    <td>Tổng giá</td>
+                    <td>' . number_format($detail->order_total_price, 0, ',', '.') . ' VND</td>
+                </tr>';
+                    }
+
+            $content .= '</table>';
+            Queue::push(new SendMailNotify($email_user, $content));
             return $this->responseSuccessWithData($data,'Order successfully!',200);
         }
         catch(Throwable $e){
