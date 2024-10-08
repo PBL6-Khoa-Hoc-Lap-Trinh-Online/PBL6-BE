@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Http\Requests\RequestUserBuyProduct;
+use App\Http\Requests\RequestUserCheckoutCart;
 use App\Jobs\SendMailNotify;
 use App\Models\Cart;
 use App\Models\Delivery;
@@ -22,7 +23,7 @@ class OrderService{
     public function __construct(OrderInterface $orderRepository){
         $this->orderRepository = $orderRepository;
     }
-    public function buyNow(Request $request){
+    public function buyNow(RequestUserBuyProduct $request){
         DB::beginTransaction();
         try{
             $product = Product::find($request->product_id);
@@ -108,7 +109,7 @@ class OrderService{
             return $this->responseError($e->getMessage());
         }
     }
-    public function checkoutCart(Request $request){
+    public function checkoutCart(RequestUserCheckoutCart $request){
         DB::beginTransaction();
         try{
             $user = auth('user_api')->user();

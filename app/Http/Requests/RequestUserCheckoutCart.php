@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Traits\APIResponse;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-class RequestUserBuyProduct extends FormRequest
+class RequestUserCheckoutCart extends FormRequest
 {
     use APIResponse;
     /**
@@ -26,11 +26,11 @@ class RequestUserBuyProduct extends FormRequest
     public function rules()
     {
         return [
-             "receiver_address_id"=>'required|exists:receiver_addresses,receiver_address_id',
-             "payment_id"=>'required|exists:payments,payment_id',
-             "delivery_id"=>'required|exists:deliveries,delivery_id',
-             "product_id" => 'required|exists:products,product_id',
-             "quantity" => 'required|integer|min:1',
+            "receiver_address_id" => 'required|exists:receiver_addresses,receiver_address_id',
+            "payment_id" => 'required|exists:payments,payment_id',
+            "delivery_id" => 'required|exists:deliveries,delivery_id',
+            "ids_cart" => 'required|array',
+            "ids_cart.*" => 'required|integer',
         ];
     }
     public function failedValidation(Validator $validator)
