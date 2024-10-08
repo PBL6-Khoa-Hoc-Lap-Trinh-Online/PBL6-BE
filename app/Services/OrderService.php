@@ -213,4 +213,23 @@ class OrderService{
         }
 
     }
+
+    public function getOrderDetail(Request $request, $id){
+        try{
+            $user = auth('user_api')->user();
+            $order = Order::where('order_id',$id)->where('user_id',$user->user_id)->first();
+            if(empty($order)){
+                return $this->responseError('Order not found!',404);
+            }
+            $order_details = OrderDetail::where('order_id',$id)->get();
+            $data = [
+                'order' => $order,
+                'order_detail' => $order_details,
+            ];
+            return $this->responseSuccessWithData($data,'Lấy thông tin đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

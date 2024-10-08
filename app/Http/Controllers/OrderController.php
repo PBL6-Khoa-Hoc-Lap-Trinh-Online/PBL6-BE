@@ -19,4 +19,7 @@ class OrderController extends Controller
     public function checkoutCart(RequestUserCheckoutCart $request){
         return $this->orderService->checkoutCart($request);
     }
+    public function getOrderDetail(Request $request, $id){
+        return $this->orderService->getOrderDetail($request, $id);
+    }
 }
