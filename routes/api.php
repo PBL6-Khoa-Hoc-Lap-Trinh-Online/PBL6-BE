@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
+use App\Http\Controllers\VietnamZoneController;
 
 use Illuminate\Http\Request;
 
@@ -169,14 +170,7 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
     });
 });
 
-//CartDetail
-// Route::prefix('cart-detail')->controller(CartDetailController::class)->group(function () {
-//     Route::middleware('check.auth:user_api')->group(function () {
-//         Route::get('/', 'get');
-//         Route::post('add', 'add');
-//         Route::post('update', 'update');
-//         Route::post('delete/{id}', 'delete');
-//         Route::post('delete-many', 'deleteMany');
-        
-//     });
-// });
+//Address
+Route::get('/provinces', [VietnamZoneController::class, 'getProvinces']);
+Route::get('/districts/{provinceId}', [VietnamZoneController::class, 'getDistricts']);
+Route::get('/wards/{districtId}', [VietnamZoneController::class, 'getWards']);
