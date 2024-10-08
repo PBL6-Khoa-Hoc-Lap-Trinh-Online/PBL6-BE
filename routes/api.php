@@ -162,6 +162,7 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::post('buy-now', 'buyNow');
         Route::post('checkout-cart', 'checkoutCart');
         Route::get('detail/{id}', 'getOrderDetail');
+        Route::post('cancel/{id}', 'cancelOrder');
 
     });
 });

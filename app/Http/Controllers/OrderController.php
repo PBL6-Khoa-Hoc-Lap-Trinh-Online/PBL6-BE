@@ -22,4 +22,7 @@ class OrderController extends Controller
     public function getOrderDetail(Request $request, $id){
         return $this->orderService->getOrderDetail($request, $id);
     }
+    public function cancelOrder(Request $request, $id){
+        return $this->orderService->cancelOrder($request, $id);
+    }
 }

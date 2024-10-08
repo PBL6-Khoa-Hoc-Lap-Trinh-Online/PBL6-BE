@@ -232,4 +232,44 @@ class OrderService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function cancelOrder(Request $request, $id){
+        DB::beginTransaction();
+        try{
+            $user = auth('user_api')->user();
+            $order = Order::where('order_id',$id)->where('user_id',$user->user_id)->first();
+            if(empty($order)){
+                return $this->responseError('Order not found!',404);
+            }
+            if($order->order_status == "shipped"){
+                return $this->responseError('Đơn hàng đang được giao, không thể hủy!',400);
+            }
+            if ($order->order_status == "delivered") {
+                return $this->responseError('Đơn hàng đã được giao, không thể hủy!', 400);
+            }
+            if ($order->order_status == "cancelled") {
+                return $this->responseError('Đơn hàng đã bị hủy!', 400);
+            }
+            $order->update([
+                'order_status' => "cancelled",
+            ]);
+            $order_details = OrderDetail::where('order_id',$id)->get();
+            foreach($order_details as $order_detail){
+                $product = Product::find($order_detail->product_id);
+                $product->update([
+                    'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
+                    'product_sold' => $product->product_sold - $order_detail->order_quantity,
+                ]);
+            }
+            $data = [
+                'order' => $order,
+                'order_detail' => $order_details,
+            ];
+            DB::commit();
+            return $this->responseSuccessWithData($data,'Hủy đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
