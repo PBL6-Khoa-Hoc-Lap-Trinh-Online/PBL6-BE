@@ -221,7 +221,8 @@ class OrderService{
             if(empty($order)){
                 return $this->responseError('Order not found!',404);
             }
-            $order_details = OrderDetail::where('order_id',$id)->get();
+            // $order_details = OrderDetail::where('order_id',$id)->get();
+            $order_details = $this->orderRepository->getDetailOrder($id);
             $data = [
                 'order' => $order,
                 'order_detail' => $order_details,
@@ -252,7 +253,8 @@ class OrderService{
             $order->update([
                 'order_status' => "cancelled",
             ]);
-            $order_details = OrderDetail::where('order_id',$id)->get();
+            // $order_details = OrderDetail::where('order_id',$id)->get();
+            $order_details = $this->orderRepository->getDetailOrder($id);
             foreach($order_details as $order_detail){
                 $product = Product::find($order_detail->product_id);
                 $product->update([
@@ -269,6 +271,20 @@ class OrderService{
         }
         catch(Throwable $e){
             DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getOrderHistory(Request $request){
+        try{
+            $user = auth('user_api')->user();
+            $order_status=$request->order_status;
+            $orders=Order::where('user_id',$user->user_id)->where('order_status', $order_status)->get();
+            if($orders->isEmpty()){
+                return $this->responseSuccess('Không có đơn hàng!',200);
+            }
+            return $this->responseSuccessWithData($orders,'Lấy lịch sử đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
     }

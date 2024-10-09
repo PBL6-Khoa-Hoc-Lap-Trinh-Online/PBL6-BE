@@ -25,4 +25,7 @@ class OrderController extends Controller
     public function cancelOrder(Request $request, $id){
         return $this->orderService->cancelOrder($request, $id);
     }
+    public function getOrderHistory(Request $request){
+        return $this->orderService->getOrderHistory($request);
+    }
 }
