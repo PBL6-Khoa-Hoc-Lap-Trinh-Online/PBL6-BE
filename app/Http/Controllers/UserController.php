@@ -8,6 +8,8 @@ use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileUser;
 use App\Http\Requests\RequestUserRegister;
+use App\Http\Requests\RequestResendVerifyEmail;
+
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
@@ -51,5 +53,8 @@ class UserController extends Controller
     }
     public function changePassword(RequestChangePassword $request){
         return $this->userService->changePassword($request);
+    }
+    public function resendVerifyEmail(RequestResendVerifyEmail $request){
+        return $this->userService->resendVerifyEmail($request);
     }
 }

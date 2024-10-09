@@ -23,6 +23,7 @@ use App\Http\Requests\RequestUpdateProfileAdmin;
 use App\Http\Requests\RequestUserRegister;
 use App\Http\Requests\RequestChangePassword;
 use App\Http\Requests\RequestAddAdmin;
+use App\Http\Requests\RequestResendVerifyEmail;
 
 use App\Jobs\SendForgotPassword;
 use App\Jobs\SendVerifyEmail;
@@ -378,7 +379,7 @@ class AdminService {
                 DB::commit();
                 Queue::push(new SendMailNotify($admin->email, $content));
 
-                return $this->responseSuccess('Email đã xác thực thành công!');
+                return $this->responseSuccess('Email đã xác thực thành công! Mật khẩu đăng nhập đã được gửi đến email');
             } else {
                 return $this->responseError('Token đã hết hạn!');
             }
@@ -387,6 +388,39 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function resendVerifyEmail(RequestResendVerifyEmail $request){
+        DB::beginTransaction();
+        try {
+            $email = $request->email;
+            $admin = Admin::where('email', $email)->first();
+            if (empty($admin)) {
+                DB::rollback();
+                return $this->responseError('Email không tồn tại trong hệ thống!');
+            }
+
+            if ($admin->email_verified_at != NULL) {
+                DB::rollback();
+                return $this->responseError('Email đã được xác thực!');
+            }
+
+            $token = Str::random(32);
+            $url = AdminEnum::VERIFY_MAIL_ADMIN . $token;
+            Log::info("Add jobs to Queue, Email:$admin->email, with url: $url");
+            Queue::push(new SendVerifyEmail($admin->email, $url));
+            $data = [
+                'token_verify_email' => $token,
+            ];
+            $admin->update($data);
+            DB::commit();
+            return $this->responseSuccessWithData($admin, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
+
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
 
     public function deleteAdmin(Request $request){
         DB::beginTransaction();

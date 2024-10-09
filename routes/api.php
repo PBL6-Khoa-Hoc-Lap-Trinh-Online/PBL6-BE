@@ -11,6 +11,8 @@ use App\Http\Controllers\ReceiverAddressController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartDetailController;
 
 use Illuminate\Http\Request;
 
@@ -38,6 +40,7 @@ Route::prefix('user')->controller(UserController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
+    Route::post('resend-verify-email', 'resendVerifyEmail');
     Route::middleware('check.auth:user_api')->group(function () {
         Route::get('logout', 'logout');
         Route::get('profile', 'profile');
@@ -66,6 +69,7 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
     Route::post('verify-email', 'verifyEmail');
+    Route::post('resend-verify-email', 'resendVerifyEmail');
     
     Route::middleware('check.auth:admin_api')->group(function(){
         Route::get('logout', 'logout');
@@ -123,7 +127,7 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('update/{id}','update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
-        Route::get('get-all-admin', 'getAll');
+        Route::get('2', 'getAll');
     });
     Route::get('names', 'getNameCategory');
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
@@ -156,6 +160,7 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
 });
 
 
+
 //user order
 Route::prefix('orders')->controller(OrderController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
@@ -181,3 +186,18 @@ Route::prefix('payments')->controller(PaymentController::class)->group(function 
 Route::prefix('deliveries')->controller(DeliveryController::class)->group(function () {
     Route::get('', 'getAll');
 });
+
+//Cart
+Route::prefix('cart')->controller(CartController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('/', 'get');
+        Route::get('/', 'get');
+        Route::post('add', 'add');
+        Route::post('update', 'update');
+        Route::post('delete/{id}', 'delete');
+        Route::post('delete-many', 'deleteMany');
+    });
+});
+
+
+

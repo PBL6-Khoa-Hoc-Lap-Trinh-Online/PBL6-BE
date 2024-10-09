@@ -9,6 +9,8 @@ use App\Http\Requests\RequestLogin;
 use App\Http\Requests\RequestResetPassword;
 use App\Http\Requests\RequestUpdateProfileUser;
 use App\Http\Requests\RequestUserRegister;
+use App\Http\Requests\RequestResendVerifyEmail;
+
 use App\Jobs\SendForgotPassword;
 use App\Jobs\SendMailNotify;
 use App\Jobs\SendVerifyEmail;
@@ -70,7 +72,6 @@ class UserService
         DB::beginTransaction();
         try {
             $token = $request->token ?? '';
-            // $user = $this->userRepository->findUserByTokenVerifyEmail($token);
             $user = User::where('token_verify_email', $token)->first();
             if ($user) {
                 $data = [
@@ -83,6 +84,38 @@ class UserService
             } else {
                 return $this->responseError('Token đã hết hạn!');
             }
+        } catch (Throwable $e) {
+            DB::rollback();
+            return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function resendVerifyEmail(RequestResendVerifyEmail $request){
+        DB::beginTransaction();
+        try {
+            $email = $request->email;
+            $user = User::where('email', $email)->first();
+            if (empty($user)) {
+                DB::rollback();
+                return $this->responseError('Email không tồn tại trong hệ thống!');
+            }
+
+            if ($user->email_verified_at != NULL) {
+                DB::rollback();
+                return $this->responseError('Email đã được xác thực!');
+            }
+
+            $token = Str::random(32);
+            $url = UserEnum::VERIFY_MAIL_USER . $token;
+            Log::info("Add jobs to Queue, Email:$user->email, with url: $url");
+            Queue::push(new SendVerifyEmail($user->email, $url));
+            $data = [
+                'token_verify_email' => $token,
+            ];
+            $user->update($data);
+            DB::commit();
+            return $this->responseSuccessWithData($user, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
+
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage());
