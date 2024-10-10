@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
+use App\Http\Controllers\DiseaseController;
 
 use Illuminate\Http\Request;
 
@@ -180,3 +181,10 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
         
 //     });
 // });
+
+Route::prefix('disease')->controller(DiseaseController::class)->group(function (){
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('/add','add');
+    });
+
+});

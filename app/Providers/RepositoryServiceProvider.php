@@ -27,6 +27,8 @@ use App\Repositories\CartInterface;
 use App\Repositories\CartRepository;
 use App\Repositories\CartDetailInterface;
 use App\Repositories\CartDetailRepository;
+use App\Repositories\DiseaseInterface;
+use App\Repositories\DiseaseRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -49,6 +51,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ImportDetailInterface::class,ImportDetailRepository::class);
         $this->app->bind(CartInterface::class, CartRepository::class);
         $this->app->bind(CartDetailInterface::class, CartDetailRepository::class);
+        $this->app->bind(DiseaseInterface::class, DiseaseRepository::class);
 
     }
 

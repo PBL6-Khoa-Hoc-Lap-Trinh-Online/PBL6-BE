@@ -18,11 +18,15 @@ return new class extends Migration
             $table->increments('disease_id');
             $table->string('disease_name')->index();
             $table->string('disease_thumbnail')->nullable();
-            $table->longText('general_overview')->nullable();
-            $table->longText('cause')->nullable();
-            $table->longText('risk_subjects')->nullable();
-            $table->longText('diagnosis')->nullable();
-            $table->longText('treatment_method')->nullable();
+            
+            $table->longText('general_overview')->nullable();      // Tổng quan chung
+            $table->longText('symptoms')->nullable();              // Triệu chứng
+            $table->longText('cause')->nullable();                 // Nguyên nhân
+            $table->longText('risk_subjects')->nullable();         // Đối tượng nguy cơ
+            $table->longText('diagnosis')->nullable();             // Chuẩn đoán
+            $table->longText('prevention')->nullable();            // Phòng ngừa bệnh
+            $table->longText('treatment_method')->nullable();      // Cách điều trị
+
             $table->boolean('disease_is_delete')->default(0);
             $table->boolean('disease_is_show')->default(0);
             $table->timestamp('disease_created_at')->nullable();
