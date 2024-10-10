@@ -288,4 +288,65 @@ class OrderService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getAll(Request $request){
+        try{
+            $orderBy = $request->typesort ?? 'order_id';
+            switch($orderBy){
+                case 'order_total_amount':
+                    $orderBy = 'order_total_amount';
+                    break;
+                case 'order_id':
+                    $orderBy = 'order_id';
+                    break;
+                case 'payment_id':
+                    $orderBy = 'payment_id';
+                    break;
+                case 'delivery_id':
+                    $orderBy = 'delivery_id';
+                    break;
+                case 'user_id':
+                    $orderBy = 'user_id';
+                    break;
+                default:
+                    $orderBy = 'order_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch($orderDirection){
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter=(object)[
+                'search' => $request->search ?? '',
+                'order_status' => $request->order_status ?? '',
+                'payment_status' => $request->payment_status ?? '',
+                'product_name' => $request->product_name ?? '',
+                'order_created_at'=> $request->order_created_at ?? 'all',
+                'from_date' => $request->from_date ?? '',
+                'to_date' => $request->to_date ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+
+            ];
+            $orders = $this->orderRepository->getAll($filter);
+           
+            if(!empty($request->paginate)){
+                $orders = $orders->paginate($request->paginate);
+            }
+            else{
+                $orders = $orders->get();
+            }
+            if ($orders->isEmpty()) {
+                return $this->responseSuccess('Không có đơn hàng!', 200);
+            }
+            return $this->responseSuccessWithData($orders,'Lấy danh sách đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

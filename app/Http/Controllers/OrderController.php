@@ -28,4 +28,7 @@ class OrderController extends Controller
     public function getOrderHistory(Request $request){
         return $this->orderService->getOrderHistory($request);
     }
+    public function getAll(Request $request){
+        return $this->orderService->getAll($request);
+    }
 }

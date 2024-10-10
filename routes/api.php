@@ -172,6 +172,9 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::get('history', 'getOrderHistory');
 
     });
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('all', 'getAll');
+    });
 });
 
 //payment
