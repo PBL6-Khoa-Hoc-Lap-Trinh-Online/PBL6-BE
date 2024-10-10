@@ -31,4 +31,7 @@ class OrderController extends Controller
     public function getAll(Request $request){
         return $this->orderService->getAll($request);
     }
+    public function getDetailOrder(Request $request, $id){
+        return $this->orderService->getDetailOrder($request, $id);
+    }
 }

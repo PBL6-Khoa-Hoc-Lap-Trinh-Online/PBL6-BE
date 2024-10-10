@@ -349,4 +349,21 @@ class OrderService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getDetailOrder(Request $request, $id){
+        try{
+            $order = Order::find($id);
+            if(empty($order)){
+                return $this->responseError('Order not found!',404);
+            }
+            $order_details = $this->orderRepository->getDetailOrder($id);
+            $data = [
+                'order' => $order,
+                'order_detail' => $order_details,
+            ];
+            return $this->responseSuccessWithData($data,'Lấy thông tin chi tiết đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

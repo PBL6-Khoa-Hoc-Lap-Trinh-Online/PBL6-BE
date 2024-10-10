@@ -174,6 +174,7 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
     });
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('all', 'getAll');
+        Route::get('detail-order/{id}','getDetailOrder');
     });
 });
 
