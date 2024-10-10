@@ -34,4 +34,7 @@ class OrderController extends Controller
     public function getDetailOrder(Request $request, $id){
         return $this->orderService->getDetailOrder($request, $id);
     }
+    public function updateStatus(Request $request, $id){
+        return $this->orderService->updateStatus($request, $id);
+    }
 }

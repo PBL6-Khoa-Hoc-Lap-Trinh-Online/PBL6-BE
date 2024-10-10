@@ -9,6 +9,7 @@ use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Models\User;
 use App\Repositories\OrderInterface;
 use App\Traits\APIResponse;
 use Illuminate\Http\Request;
@@ -363,6 +364,47 @@ class OrderService{
             return $this->responseSuccessWithData($data,'Lấy thông tin chi tiết đơn hàng thành công!',200);
         }
         catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function updateStatus(Request $request, $id){
+        DB::beginTransaction();
+        try{
+            $order = Order::find($id);
+            if(empty($order)){
+                return $this->responseError('Order not found!',404);
+            }
+            if($order->order_status == "cancelled"){
+                return $this->responseError('Đơn hàng đã bị hủy!',400);
+            }
+            else if($order->order_status == "delivered"){
+                return $this->responseError('Đơn hàng đã được giao!',400);
+            }
+            else if($order->order_status == "pending"){
+                $order->update([
+                    'order_status' => 'confirmed',
+                ]);
+            }
+            else if($order->order_status == "confirmed"){
+                $order->update([
+                    'order_status' => 'shipped',
+                ]);
+            }
+            else {
+                $order->update([
+                    'order_status' => 'delivered',
+                    'payment_status' => 'paid',
+                ]);
+            }
+            DB::commit();
+            $user_email= User::find($order->user_id)->email;
+            $content = 'Đơn hàng của bạn có mã đơn hàng là '.$id.' đã được cập nhật trạng thái thành: '.$order->order_status;
+            Log::info("Thêm jobs vào hàng đợi, Email:$user_email");
+            Queue::push(new SendMailNotify($user_email, $content));
+            return $this->responseSuccessWithData($order,'Cập nhật trạng thái đơn hàng thành công!',200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }
