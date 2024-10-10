@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
+use App\Http\Controllers\VietnamZoneController;
 
 use Illuminate\Http\Request;
 
@@ -199,5 +200,7 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
     });
 });
 
-
-
+//Address
+Route::get('/provinces', [VietnamZoneController::class, 'getProvinces']);
+Route::get('/districts/{provinceId}', [VietnamZoneController::class, 'getDistricts']);
+Route::get('/wards/{districtId}', [VietnamZoneController::class, 'getWards']);
