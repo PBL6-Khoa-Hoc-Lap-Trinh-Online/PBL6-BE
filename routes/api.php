@@ -8,6 +8,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReceiverAddressController;
+use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
@@ -204,6 +205,15 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
         Route::post('delete-many', 'deleteMany');
     });
 });
+//statistic
+Route::prefix('statistics')->controller(StatisticController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('revenue', 'getRevenue');
+    });
+});
+
+
+
 
 //Address
 Route::get('/provinces', [VietnamZoneController::class, 'getProvinces']);
