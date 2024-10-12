@@ -209,6 +209,7 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
 Route::prefix('statistics')->controller(StatisticController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('revenue', 'getRevenue');
+        Route::get('order', 'getOrders');
     });
 });
 

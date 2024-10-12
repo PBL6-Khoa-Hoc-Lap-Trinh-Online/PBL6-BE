@@ -56,4 +56,37 @@ class StatisticService
             return $this->responseError($e->getMessage());
         }
     }
+    public function getOrders(Request $request){
+        try{
+            //Tổng số đơn hàng
+            $totalOrders = Order::count();
+            //Số đơn hàng theo từng trạng thái
+            $ordersByStatus = Order::selectRaw('order_status, count(order_id) as total')
+                ->groupBy('order_status')
+                ->get();
+            //Số đơn hàng theo từng ngày
+            $dailyOrders = Order::selectRaw('DATE(order_created_at) as date, count(order_id) as total')
+                ->groupBy('date')
+                ->get();
+            //Số đơn hàng theo từng tháng
+            $monthlyOrders = Order::selectRaw('YEAR(order_created_at) as year, MONTH(order_created_at) as month, count(order_id) as total')
+                ->groupBy('year','month')
+                ->get();
+            //Số đơn hàng theo từng năm
+            $yearlyOrders = Order::selectRaw('YEAR(order_created_at) as year, count(order_id) as total')
+                ->groupBy('year')
+                ->get();
+            $data = [
+                'total_orders' => $totalOrders,
+                'orders_by_status' => $ordersByStatus,
+                'daily_orders' => $dailyOrders,
+                'monthly_orders' => $monthlyOrders,
+                'yearly_orders' => $yearlyOrders
+            ];
+            return $this->responseSuccessWithData($data,'Lấy số đơn hàng thành công!', 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }
