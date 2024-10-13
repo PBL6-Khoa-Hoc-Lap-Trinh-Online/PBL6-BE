@@ -210,6 +210,7 @@ Route::prefix('statistics')->controller(StatisticController::class)->group(funct
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('revenue', 'getRevenue');
         Route::get('order', 'getOrders');
+        Route::get('profit', 'getProfit');
     });
 });
 
