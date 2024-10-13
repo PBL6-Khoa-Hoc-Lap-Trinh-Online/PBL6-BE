@@ -270,8 +270,9 @@ class UserService
                     'email_verified_at' => null,
                 ];
                 $user->update($data);
+                auth('user_api')->logout();
                 DB::commit();
-                return $this->responseSuccessWithData($user, 'Cập nhật thông tin tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 200);
+                return $this->responseSuccess('Cập nhật thông tin tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 200);
             }
 
             DB::commit();
