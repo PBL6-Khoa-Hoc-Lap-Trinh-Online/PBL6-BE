@@ -143,7 +143,7 @@ class CategoryService{
             }
             $filter = (object) [
                 'search' => $request->search ?? '',
-                'category_is_delete' => $request->category_is_delete ?? 'all',
+                'category_is_delete' => $request->category_is_delete ?? '0',
                 'orderBy' => $orderBy,
                 'orderDirection' => $orderDirection,
             ];

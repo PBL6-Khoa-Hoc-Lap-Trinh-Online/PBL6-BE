@@ -129,7 +129,7 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('update/{id}','update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
-        Route::get('2', 'getAll');
+        Route::get('all', 'getAll');
     });
     Route::get('names', 'getNameCategory');
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con

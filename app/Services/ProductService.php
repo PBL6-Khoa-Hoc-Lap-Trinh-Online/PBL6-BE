@@ -73,12 +73,11 @@ class ProductService{
                 'search' => $request->search ?? '',
                 'category_name' => $request->category_name ?? '',
                 'brand_names' =>$request->brand_names ?? [],
-                'product_price'=>$request->product_price ??'',
-                'price_min' =>$request->price_min ?? '',
-                'price_max' =>$request->price_max ?? '',
+                'price_from' =>$request->price_from ?? '',
+                'price_to' =>$request->price_to ?? '',
                 'orderBy' => $orderBy,
                 'orderDirection' => $orderDirection,
-                'product_is_delete' =>$request->is_delete ?? 'both',
+                'product_is_delete' =>$request->product_is_delete ?? '0',
             ];
             $products = $this->productRepository->getAll($filter);
             if(!empty($request->paginate)){

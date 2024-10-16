@@ -16,17 +16,31 @@ class OrderRepository extends BaseRepository implements OrderInterface{
     }
     public static function getAll($filter){
         $filter = (object) $filter;
-        $data = (new self)->model->join('order_details', 'orders.order_id', '=', 'order_details.order_id') // Changed this to join order_details, not orders
+        $data = (new self)->model->join('order_details', 'orders.order_id', '=', 'order_details.order_id')
+            ->join('users', 'orders.user_id', '=', 'users.user_id')
+            ->join('payments', 'orders.payment_id', '=', 'payments.payment_id')
+            ->join('deliveries', 'orders.delivery_id', '=', 'deliveries.delivery_id')
+            ->join('receiver_addresses', 'orders.receiver_address_id', '=', 'receiver_addresses.receiver_address_id')
             ->join('products', 'order_details.product_id', '=', 'products.product_id')
-            ->select('orders.*')
+            ->select('orders.*', 'users.user_fullname','payments.payment_method', 'deliveries.delivery_method', 'receiver_addresses.receiver_name', 'receiver_addresses.receiver_phone', 'receiver_addresses.receiver_address')
             ->when(!empty($filter->search), function ($q) use ($filter) {
                 $q->where(function ($query) use ($filter) {
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('payment_method', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('delivery_method', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('order_status', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('payment_status', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('order_total_amount', 'LIKE', '%' . $filter->search . '%');
                 });
             })
-            ->when(!empty($filter->product_name), function ($query) use ($filter) {
-                return $query->where('products.product_name', '=', $filter->product_name);
+            ->when(!empty($filter->payment_method), function ($query) use ($filter) {
+                return $query->where('payments.payment_method', '=', $filter->payment_method);
+            })
+            ->when(!empty($filter->delivery_method), function ($query) use ($filter) {
+                return $query->where('deliveries.delivery_method', '=', $filter->delivery_method);
+            })
+            ->when(!empty($filter->user_id), function ($query) use ($filter) {
+                return $query->where('orders.user_id', '=', $filter->user_id);
             })
             ->when(!empty($filter->order_status), function ($query) use ($filter) {
                 return $query->where('orders.order_status', '=', $filter->order_status);

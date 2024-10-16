@@ -218,11 +218,10 @@ class OrderService{
     public function getOrderDetail(Request $request, $id){
         try{
             $user = auth('user_api')->user();
-            $order = Order::where('order_id',$id)->where('user_id',$user->user_id)->first();
+            $order = $this->orderRepository->getAll((object)['order_id' => $id, 'user_id' => $user->user_id])->first();
             if(empty($order)){
                 return $this->responseError('Order not found!',404);
             }
-            // $order_details = OrderDetail::where('order_id',$id)->get();
             $order_details = $this->orderRepository->getDetailOrder($id);
             $data = [
                 'order' => $order,
@@ -278,8 +277,9 @@ class OrderService{
     public function getOrderHistory(Request $request){
         try{
             $user = auth('user_api')->user();
+            $user_id=$user->user_id;
             $order_status=$request->order_status;
-            $orders=Order::where('user_id',$user->user_id)->where('order_status', $order_status)->get();
+            $orders = $this->orderRepository->getAll((object)['user_id' => $user_id, 'order_status' => $order_status])->get();
             if($orders->isEmpty()){
                 return $this->responseSuccess('Không có đơn hàng!',200);
             }
@@ -296,36 +296,37 @@ class OrderService{
                 case 'order_total_amount':
                     $orderBy = 'order_total_amount';
                     break;
+                case 'new':
+                    $orderBy = 'order_id';
+                    break;
+                case 'order_status':
+                    $orderBy = 'order_status';
+                    break;
+                case 'payment_status':
+                    $orderBy = 'payment_status';
+                    break;
+                case 'payment_method':
+                    $orderBy = 'payment_method';
+                    break;
+                case 'delivery_method':
+                    $orderBy = 'delivery_method';
+                    break;
                 case 'order_id':
                     $orderBy = 'order_id';
                     break;
-                case 'payment_id':
-                    $orderBy = 'payment_id';
-                    break;
-                case 'delivery_id':
-                    $orderBy = 'delivery_id';
-                    break;
-                case 'user_id':
-                    $orderBy = 'user_id';
-                    break;
                 default:
                     $orderBy = 'order_id';
                     break;
             }
-            $orderDirection = $request->sortlatest ?? 'true';
-            switch($orderDirection){
-                case 'true':
-                    $orderDirection = 'DESC';
-                    break;
-                default:
-                    $orderDirection = 'ASC';
-                    break;
-            }
+            $orderDirection = $request->sortlatest == 'true' ? 'DESC' : 'ASC';
+
             $filter=(object)[
                 'search' => $request->search ?? '',
-                'order_status' => $request->order_status ?? '',
+                'user_id' => $request->user_id ?? '',
+                'order_status' => $request->order_status ?? 'pending',
                 'payment_status' => $request->payment_status ?? '',
-                'product_name' => $request->product_name ?? '',
+                'payment_method' => $request->payment_method ?? '',
+                'delivery_method' => $request->delivery_method ?? '',
                 'order_created_at'=> $request->order_created_at ?? 'all',
                 'from_date' => $request->from_date ?? '',
                 'to_date' => $request->to_date ?? '',
@@ -334,7 +335,6 @@ class OrderService{
 
             ];
             $orders = $this->orderRepository->getAll($filter);
-           
             if(!empty($request->paginate)){
                 $orders = $orders->paginate($request->paginate);
             }
@@ -352,7 +352,8 @@ class OrderService{
     }
     public function getDetailOrder(Request $request, $id){
         try{
-            $order = Order::find($id);
+            // $order = Order::find($id);
+            $order =$this->orderRepository->getAll((object)['order_id' => $id])->first();
             if(empty($order)){
                 return $this->responseError('Order not found!',404);
             }
@@ -371,6 +372,7 @@ class OrderService{
         DB::beginTransaction();
         try{
             $order = Order::find($id);
+            // $order = $this->orderRepository->getAll((object)['order_id' => $id])->first();
             if(empty($order)){
                 return $this->responseError('Order not found!',404);
             }

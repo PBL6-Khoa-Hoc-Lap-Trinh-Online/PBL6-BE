@@ -11,7 +11,7 @@ class ImportRepository extends BaseRepository implements ImportInterface {
     }
     public static function getAll($filter){
         $filter = (object) $filter;
-        $data = (new self)->model->selectRaw('imports.*,suppliers.*')
+        $data = (new self)->model->selectRaw('imports.*,suppliers.supplier_name')
             ->leftJoin('suppliers', 'imports.supplier_id', 'suppliers.supplier_id')
             ->when(!empty($filter->search), function ($q) use ($filter) {
                 $q->where(function ($query) use ($filter) {

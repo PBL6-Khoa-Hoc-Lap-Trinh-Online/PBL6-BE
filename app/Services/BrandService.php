@@ -137,7 +137,7 @@ class BrandService{
             }
             $filter = (object) [
                 'search' => $request->search ?? '',
-                'brand_is_delete' => $request->brand_is_delete ?? 'all',
+                'brand_is_delete' => $request->brand_is_delete ?? '0',
                 'orderBy' => $orderBy,
                 'orderDirection' => $orderDirection,
             ];

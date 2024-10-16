@@ -32,8 +32,7 @@ use App\Jobs\SendMailNotify;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\PasswordReset;
-
-
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Throwable;
 
 class AdminService {
@@ -71,7 +70,7 @@ class AdminService {
             $admin->access_token = auth()->guard('admin_api')->attempt($credentials);
             $admin->token_type = 'bearer';
             $admin->expires_in = auth()->guard('admin_api')->factory()->getTTL() * 60;
-
+            $admin->role = 'admin';
             return $this->responseSuccessWithData($admin, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
             dd($e->getMessage());

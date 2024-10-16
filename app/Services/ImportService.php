@@ -58,15 +58,21 @@ class ImportService{
             return $this->responseError($e->getMessage());
         }
     }
-    public function getAll(Request $equest){
+    public function getAll(Request $request){
         try{
             $orderBy = $request->typesort ?? 'import_id';
             switch($orderBy){
                 case 'supplier_name':
-                    $orderbBy = 'supplier_name';
+                    $orderBy = 'supplier_name';
                     break;
                 case 'import_total_amount':
                     $orderBy = 'import_total_amount';
+                    break;
+                case 'new':
+                    $orderBy = 'import_id';
+                    break;
+                case 'import_date':
+                    $orderBy = 'import_date';
                     break;
                 case 'import_id':
                     $orderBy = 'import_id';
@@ -108,7 +114,8 @@ class ImportService{
     }
     public function getImportDetails(Request $request,$id){
         try{
-            $import = Import::find($id);
+            // $import = Import::find($id);
+            $import = $this->importRepository->getAll((object)['product_id' => $id])->first();;
             if(empty($import)){
                 return $this->responseError('Không tìm thấy phiếu nhập kho này!');
             }
