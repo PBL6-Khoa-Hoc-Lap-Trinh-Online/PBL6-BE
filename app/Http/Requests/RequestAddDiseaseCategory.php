@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Traits\APIResponse;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-
-class RequestDiseaseAdd extends FormRequest
+class RequestAddDiseaseCategory extends FormRequest
 {
     use APIResponse;
     /**
@@ -19,20 +18,16 @@ class RequestDiseaseAdd extends FormRequest
         return true;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
     public function rules()
     {
         return [
-            'disease_name' => 'required|string|max:255',
-            'disease_thumbnail' => 'nullable|image|max:2048',
-            'general_overview' => 'required|string',
-            'symptoms' => 'required|string',
-            'cause' => 'required|string',
-            'risk_subjects' => 'required|string',
-            'diagnosis' => 'required|string',
-            'prevention' => 'required|string',
-            'treatment_method' => 'required|string',
-            'disease_is_delete' => 'boolean',
-            'disease_is_show' => 'boolean',
+            "category_id" => "required|exists:categories,category_id",
+            "disease_id" => "required|exists:diseases,disease_id",
         ];
     }
     public function failedValidation(Validator $validator)
@@ -41,6 +36,7 @@ class RequestDiseaseAdd extends FormRequest
 
         return $this->responseErrorValidate($errors, $validator);
     }
+
     public function messages()
     {
         return [

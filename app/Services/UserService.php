@@ -152,7 +152,9 @@ class UserService
             $user->access_token = auth()->guard('user_api')->attempt($credentials);
             $user->token_type = 'bearer';
             $user->expires_in = auth()->guard('user_api')->factory()->getTTL() * 60;
-
+            $user->role = 'user';
+            
+            
             return $this->responseSuccessWithData($user, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
             dd($e->getMessage());

@@ -183,8 +183,14 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
 // });
 
 Route::prefix('disease')->controller(DiseaseController::class)->group(function (){
+    Route::get('get', 'getDiseaseUser');
+    Route::get('getCategory/{id}','getDiseaseCategory');
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('/add','add');
+        Route::post('add','add');
+        Route::get('getAll','getAll');
+        Route::post('update/{id}','update');
+        Route::post('addCategory','addDiseaseCategory');
     });
+    Route::get('{id}','get');
 
 });
