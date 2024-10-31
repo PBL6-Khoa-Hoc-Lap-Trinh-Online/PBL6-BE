@@ -21,7 +21,7 @@ return new class extends Migration
             $table->unsignedInteger('delivery_id');
             $table->decimal('order_total_amount',15,2);
             $table->enum('order_status',['pending','confirmed','shipped','delivered','cancelled'])->default('pending');
-            $table->enum('payment_status', ['unpaid', 'paid', 'refunded'])->default('unpaid');
+            $table->enum('payment_status', ['pending', 'completed', 'failed'])->default('pending');
             $table->string('order_note')->nullable();
             $table->string('delivery_tracking_number')->nullable();
             $table->timestamp('order_created_at')->nullable();

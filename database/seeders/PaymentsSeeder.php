@@ -18,17 +18,11 @@ class PaymentsSeeder extends Seeder
     {
         $data = [
             [
-                "payment_method" => "momo"
+                "payment_method" => "COD"
             ],
             [
-                "payment_method" => "zalopay"
+                "payment_method" => "PAYOS"
             ],
-            [
-                "payment_method" => "vnpay"
-            ],
-            [
-                "payment_method" => "cash_on_delivery"
-            ]
         ];
         foreach ($data as $payment) {
             Payment::create($payment);

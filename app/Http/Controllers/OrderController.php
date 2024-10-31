@@ -37,4 +37,10 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id){
         return $this->orderService->updateStatus($request, $id);
     }
+    public function getPaymentLinkOfOrder(Request $request, $id){
+        return $this->orderService->getPaymentLinkOfOrder($request, $id);
+    }
+    public function cancelPaymentLinkOfOrder(Request $request, $id){
+        return $this->orderService->cancelPaymentLinkOfOrder($request, $id);
+    }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use Kjmtrue\VietnamZone\Models\Province;
-use Kjmtrue\VietnamZone\Models\District;
-use Kjmtrue\VietnamZone\Models\Ward;
+use App\Models\Province;
+use App\Models\District;
+use App\Models\Ward;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Traits\APIResponse;

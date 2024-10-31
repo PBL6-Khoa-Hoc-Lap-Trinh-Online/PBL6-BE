@@ -72,6 +72,7 @@ class ProductService{
             $filter = (object) [
                 'search' => $request->search ?? '',
                 'category_name' => $request->category_name ?? '',
+                'category_parent_name'=>$request->category_parent_name ?? '',
                 'brand_names' =>$request->brand_names ?? [],
                 'price_from' =>$request->price_from ?? '',
                 'price_to' =>$request->price_to ?? '',

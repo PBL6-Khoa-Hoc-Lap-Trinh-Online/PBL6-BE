@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->increments('payment_id');
-            $table->enum('payment_method',['momo','zalopay','vnpay','cash_on_delivery']);
+            $table->string('payment_method');
         });
     }
 

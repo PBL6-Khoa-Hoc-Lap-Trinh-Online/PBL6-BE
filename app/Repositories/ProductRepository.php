@@ -10,16 +10,21 @@ class ProductRepository extends BaseRepository implements ProductInterface{
     }
     public static function getAll($filter){
         $filter = (object) $filter;
-        $data = (new self)->model->selectRaw('products.*,categories.category_name,brands.brand_name')
+        $data = (new self)->model->selectRaw('products.*,categories.category_name,brands.brand_name,parents.category_name as parent_category_name')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.category_id')
+            ->leftJoin('categories as parents', 'categories.category_parent_id', '=', 'parents.category_id')
             ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
             ->when(!empty($filter->search), function ($q) use ($filter) {
                 $q->where(function ($query) use ($filter) {
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
-                        ->orWhere('category_name','LIKE', '%' . $filter->search . '%')
+                        ->orWhere('categories.category_name','LIKE', '%' . $filter->search . '%')
+                        ->orWhere('parents.category_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('brand_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_uses', 'LIKE', '%' . $filter->search . '%');
                 });
+            })
+            ->when(!empty($filter->category_parent_name), function ($query) use ($filter) {
+                return $query->where('parents.category_name', '=', $filter->category_parent_name);
             })
             ->when(!empty($filter->category_name), function ($query) use ($filter) {
                 return $query->where('categories.category_name', '=', $filter->category_name);

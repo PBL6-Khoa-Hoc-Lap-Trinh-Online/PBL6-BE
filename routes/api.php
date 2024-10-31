@@ -171,7 +171,8 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::get('detail/{id}', 'getOrderDetail');
         Route::post('cancel/{id}', 'cancelOrder');
         Route::get('history', 'getOrderHistory');
-
+        Route::get('{id}','getPaymentLinkOfOrder');
+        Route::put('{id}','cancelPaymentLinkOfOrder');
     });
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('all', 'getAll');
@@ -183,10 +184,13 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
 //payment
 Route::prefix('payments')->controller(PaymentController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
-        Route::post('vnpay', 'createVnPayPayment');
-        Route::get('vnpay-return', 'vnpayReturn');
+       
+        Route::get('{orderCode}', 'getPaymentInfo');
+        Route::post('{orderCode}/cancel', 'cancelPayment');
     });
+    Route::post('webhook', 'handlePayOSWebhook');
     Route::get('', 'getAll');
+    
 });
 
 //delivery

@@ -27,9 +27,9 @@ class CategoryRepository extends BaseRepository implements CategoryInterface{
             ->from('categories as category')
             ->leftJoin('categories as category_parent', 'category.category_parent_id', '=', 'category_parent.category_id') // Self join
             ->selectRaw(
-                'category.*, category_parent.*,category.category_id as category_id,category.category_name as category_name, category.category_type as category_type, 
+                'category.*, category_parent.*,category.category_id as category_id,category.category_thumbnail as category_thumbnail,category.category_name as category_name, category.category_type as category_type, 
                 category.category_description as category_description,category.category_parent_id as parent_id, category.category_is_delete as category_is_delete,
-                category_parent.category_id as category_parent_id, category_parent.category_name as parent_name,category.category_parent_id as grand_parent_id,
+                category_parent.category_id as category_parent_id,category.category_thumbnail as parent_thumbnail, category_parent.category_name as parent_name,category.category_parent_id as grand_parent_id,
                 category_parent.category_type as parent_type, category_parent.category_description as parent_description, category_parent.category_is_delete as parent_is_delete'
             )
             ->when(!empty($filter->search), function ($q) use ($filter) {

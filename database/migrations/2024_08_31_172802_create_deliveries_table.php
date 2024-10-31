@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->increments('delivery_id');
-            $table->enum('delivery_method',['GHN','GHTK', 'VIETTEL','AT_PHARMACITY','SHIPPER'])->default('GHN');
+            $table->string('delivery_method');
             $table->decimal('delivery_fee', 15, 2)->nullable();
             $table->string('delivery_description')->nullable();
             

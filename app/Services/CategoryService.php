@@ -11,6 +11,7 @@ use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Str;
 use Termwind\Components\BreakLine;
 use Throwable;
 
@@ -159,7 +160,6 @@ class CategoryService{
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
-    }
     public function getNameCategory(Request $request){
         try{
             $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name')->get();
