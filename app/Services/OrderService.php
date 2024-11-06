@@ -390,4 +390,36 @@ class OrderService
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function getPaymentInfo($orderCode)
+    {
+        try {
+            $response = $this->payOSService->getPaymentLink($orderCode);
+            return $this->responseSuccess($response, 200);
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function cancelPayment($orderCode, Request $request)
+    {
+        try {
+            $response = $this->payOSService->cancelPaymentLink($orderCode);
+            $order = Order::where('order_id', $orderCode)->first();
+            $order->update([
+                'payment_status' => 'failed',
+                'order_status' => 'cancelled',
+            ]);
+            $order_details = $this->orderRepository->getDetailOrder($orderCode);
+            foreach ($order_details as $order_detail) {
+                $product = Product::find($order_detail->product_id);
+                $product->update([
+                    'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
+                    'product_sold' => $product->product_sold - $order_detail->order_quantity,
+                ]);
+            }
+            return $this->responseSuccessWithData($order, "Đã huỷ đơn hàng!", 200);
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

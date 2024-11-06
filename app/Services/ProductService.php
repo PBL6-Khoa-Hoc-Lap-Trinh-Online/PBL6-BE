@@ -5,6 +5,7 @@ use App\Http\Requests\RequestAddProduct;
 use App\Http\Requests\RequestDeleteManyProduct;
 use App\Http\Requests\RequestDeleteProduct;
 use App\Jobs\UploadImage;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Repositories\ProductInterface;
 use App\Traits\APIResponse;
@@ -201,6 +202,11 @@ class ProductService{
             $product = Product::find($id);
             if(empty($product)){
                 return $this->responseError("Sản phẩm không tồn tại!", 404);
+            }
+            //kiểm tra xem product đang nằm trong đơn hàng nào hay không
+            $productExist=OrderDetail::where('product_id',$id)->first();
+            if($productExist){
+                return $this->responseError("Sản phẩm đang nằm trong đơn hàng, không thể xoá!");
             }
             $product->update(['product_is_delete' => $request->product_is_delete]);
             DB::commit();

@@ -17,14 +17,7 @@ class PaymentController extends Controller
         return $this->paymentService->getAll($request);
 
     }
-    public function getPaymentInfo($orderCode)
-    {
-        return $this->paymentService->getPaymentInfo($orderCode);
-    }
-    public function cancelPayment($orderCode, Request $request)
-    {
-        return $this->paymentService->cancelPayment($orderCode, $request);
-    }
+  
     public function handlePayOSWebhook(Request $request)
     {
         return $this->paymentService->handlePayOSWebhook($request);
