@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
 use App\Http\Controllers\VietnamZoneController;
+use App\Http\Controllers\DiseaseController;
 
 use Illuminate\Http\Request;
 
@@ -220,3 +221,18 @@ Route::prefix('statistics')->controller(StatisticController::class)->group(funct
 Route::get('/provinces', [VietnamZoneController::class, 'getProvinces']);
 Route::get('/districts/{provinceId}', [VietnamZoneController::class, 'getDistricts']);
 Route::get('/wards/{districtId}', [VietnamZoneController::class, 'getWards']);
+
+
+//Disease
+Route::prefix('disease')->controller(DiseaseController::class)->group(function (){
+    Route::get('get', 'getDiseaseUser');
+    Route::get('getCategory/{id}','getDiseaseCategory');
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add','add');
+        Route::get('getAll','getAll');
+        Route::post('update/{id}','update');
+        Route::post('addCategory','addDiseaseCategory');
+    });
+    Route::get('{id}','get');
+
+});
