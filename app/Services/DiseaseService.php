@@ -14,6 +14,7 @@ use App\Repositories\DiseaseRepository;
 
 use App\Http\Requests\RequestDiseaseAdd;
 use App\Http\Requests\RequestAddDiseaseCategory;
+use Throwable;
 
 class DiseaseService
 {

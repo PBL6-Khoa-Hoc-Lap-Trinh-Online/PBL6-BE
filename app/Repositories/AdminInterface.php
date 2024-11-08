@@ -7,5 +7,5 @@ namespace App\Repositories;
  */
 interface AdminInterface extends RepositoryInterface
 {
-    
+    public static function getAllAdmin($filter);
 }

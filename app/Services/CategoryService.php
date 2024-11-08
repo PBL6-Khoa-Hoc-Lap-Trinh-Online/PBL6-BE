@@ -113,10 +113,11 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
-    public function getAll(Request $request){
-        try{
+    public function getAll(Request $request)
+    {
+        try {
             $orderBy = $request->typesort ?? 'category_id';
-            switch($orderBy){
+            switch ($orderBy) {
                 case 'category_name':
                     $orderBy = 'category_name';
                     break;
@@ -134,7 +135,7 @@ class CategoryService{
                     break;
             }
             $orderDirection = $request->sortlatest ?? 'true';
-            switch($orderDirection){
+            switch ($orderDirection) {
                 case 'true':
                     $orderDirection = 'DESC';
                     break;
@@ -149,17 +150,16 @@ class CategoryService{
                 'orderDirection' => $orderDirection,
             ];
             $categories = CategoryRepository::getAll($filter);
-            if(!(empty($request->paginate))){
+            if (!(empty($request->paginate))) {
                 $categories = $categories->paginate($request->paginate);
-            }
-            else{
+            } else {
                 $categories = $categories->get();
             }
-            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!",200);
-        }
-        catch(Throwable $e){
+            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!", 200);
+        } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
+    }
     public function getNameCategory(Request $request){
         try{
             $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name')->get();

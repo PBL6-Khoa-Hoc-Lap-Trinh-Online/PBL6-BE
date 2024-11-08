@@ -32,15 +32,18 @@ use App\Jobs\SendMailNotify;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\PasswordReset;
+use App\Repositories\UserInterface;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Throwable;
 
 class AdminService {
     use APIResponse;
     protected AdminInterface $adminRepository;
-    public function __construct(AdminInterface $adminRepository)
+    protected UserInterface $userRepository;
+    public function __construct(AdminInterface $adminRepository, UserInterface $userRepository)
     {
         $this->adminRepository = $adminRepository;
+        $this->userRepository = $userRepository;
     }
     public function login(RequestLogin $request)
     {
@@ -227,11 +230,57 @@ class AdminService {
 
     public function manageUsers(Request $request){
         try {
-            // $users = User::all();
-            $users = User::paginate(20);
-            if ($users->isEmpty()) {
-                return $this->responseError('Không có người dùng nào trong hệ thống!');
+            $orderBy = $request->orderBy ?? 'user_id';
+            $orderDirection=$request->sortlatest ?? 'true';
+            switch($orderBy){
+                case 'user_fullname':
+                    $orderBy = 'user_fullname';
+                    break;
+                case 'email':
+                    $orderBy = 'email';
+                    break;
+                case 'user_gender':
+                    $orderBy = 'user_gender';
+                    break;
+                case 'user_birthday':
+                    $orderBy = 'user_birthday';
+                    break;
+                case 'new':
+                    $orderBy = "user_id";
+                    break;
+                default:
+                    $orderBy = 'user_id';
+                    break;
             }
+            switch($orderDirection){
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter= (object) [
+                'search' => $request->search ?? '',
+                'user_is_delete' => $request->user_is_delete ?? '0',
+                'user_is_block' => $request->user_is_block ?? '0',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $users = $this->userRepository->getAllUser($filter);
+            if(!(empty($request->paginate))){
+                $users = $users->paginate($request->paginate);
+            }
+            else{
+                $users = $users->get();
+            }
+
+
+            // // $users = User::all();
+            // $users = User::paginate(20);
+            // if ($users->isEmpty()) {
+            //     return $this->responseError('Không có người dùng nào trong hệ thống!');
+            // }
 
             return $this->responseSuccessWithData($users, 'Danh sách người dùng được lấy thành công!');
         } catch (Throwable $e) {
@@ -241,10 +290,48 @@ class AdminService {
 
     public function manageAdmins(Request $request){
         try {
-            $admins = Admin::paginate(20);
-            if ($admins->isEmpty()) {
-                return $this->responseError('Không có quản trị viên nào trong hệ thống!');
+            $orderBy = $request->orderBy ?? 'admin_id';
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderBy) {
+                case 'admin_fullname':
+                    $orderBy = 'admin_fullname';
+                    break;
+                case 'email':
+                    $orderBy = 'email';
+                    break;
+                case 'admin_is_admin':
+                    $orderBy = 'admin_is_admin';
+                    break;
+                case 'new':
+                    $orderBy = "admin_id";
+                    break;
+                default:
+                    $orderBy = 'admin_id';
+                    break;
             }
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $admins = $this->adminRepository->getAllAdmin($filter);
+            if (!(empty($request->paginate))) {
+                $admins = $admins->paginate($request->paginate);
+            } else {
+                $admins = $admins->get();
+            }
+            // $admins = Admin::paginate(20);
+            // if ($admins->isEmpty()) {
+            //     return $this->responseError('Không có quản trị viên nào trong hệ thống!');
+            // }
     
             return $this->responseSuccessWithData($admins, 'Danh sách quản trị viên được lấy thành công!');
         } catch (Throwable $e) {
