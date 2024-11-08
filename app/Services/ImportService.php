@@ -115,7 +115,7 @@ class ImportService{
     public function getImportDetails(Request $request,$id){
         try{
             // $import = Import::find($id);
-            $import = $this->importRepository->getAll((object)['product_id' => $id])->first();;
+            $import = $this->importRepository->getAll((object)['import_id' => $id])->first();;
             if(empty($import)){
                 return $this->responseError('Không tìm thấy phiếu nhập kho này!');
             }
