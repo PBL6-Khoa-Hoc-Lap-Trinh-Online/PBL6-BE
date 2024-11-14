@@ -36,4 +36,7 @@ class ProductController extends Controller
     public function getNameProduct(Request $request){
         return $this->productService->getNameProduct($request);
     }
+    public function getAllByAdmin(Request $request){
+        return $this->productService->getAllByAdmin($request);
+    }
 }

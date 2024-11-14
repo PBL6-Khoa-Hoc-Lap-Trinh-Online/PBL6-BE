@@ -10,7 +10,8 @@ class BrandRepository extends BaseRepository implements BrandInterface
     {
         return Brand::class;
     }
-    public static function  getAll($filter){
+    public static function  getAll($filter)
+    {
         $filter = (object) $filter;
         $data = (new self)->model
             ->when(!empty($filter->search), function ($q) use ($filter) {
@@ -19,14 +20,14 @@ class BrandRepository extends BaseRepository implements BrandInterface
                         ->orWhere('brand_description', 'LIKE', '%' . $filter->search . '%');
                 });
             })
-                ->when(isset($filter->brand_is_delete), function ($query) use ($filter) {
-                    // if ($filter->brand_is_delete !== 'all') {
-                        $query->where('brands.brand_is_delete', $filter->brand_is_delete);
-                    // }
-                })
-                ->when(!empty($filter->orderBy), function ($query) use ($filter) {
-                    $query->orderBy($filter->orderBy, $filter->orderDirection);
-                });
+            ->when(isset($filter->brand_is_delete), function ($query) use ($filter) {
+                if ($filter->brand_is_delete !== 'all') {
+                    $query->where('brands.brand_is_delete', $filter->brand_is_delete);
+                }
+            })
+            ->when(!empty($filter->orderBy), function ($query) use ($filter) {
+                $query->orderBy($filter->orderBy, $filter->orderDirection);
+            });
         return $data;
     }
 }

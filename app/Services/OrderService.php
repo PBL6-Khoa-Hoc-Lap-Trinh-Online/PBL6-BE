@@ -130,7 +130,7 @@ class OrderService
             return $this->responseSuccessWithData(['order' => $order, 'order_detail' => $orderDetail], 'Đặt hàng thành công!', 200);
         } catch (Throwable $th) {
             DB::rollBack();
-            return $this->responseError($th->getMessage(), 500);
+            return $this->responseError($th->getMessage(), 400);
         }
     }
     public function checkoutCart(RequestUserCheckoutCart $request)

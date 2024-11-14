@@ -33,6 +33,9 @@ class CategoryController extends Controller
     public function getAll(Request $request){
         return $this->categoryService->getAll($request);
     }
+    public function getAllByAdmin(Request $request){
+        return $this->categoryService->getAllByAdmin($request);
+    }
     public function getAllCategories(Request $request){
         return $this->categoryService->getCategories($request);
     }

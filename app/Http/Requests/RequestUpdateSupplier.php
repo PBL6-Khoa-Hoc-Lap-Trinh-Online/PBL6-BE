@@ -28,10 +28,10 @@ class RequestUpdateSupplier extends FormRequest
      */
     public function rules()
     {
-        $id = $this->route('id');
+        $supplier_id = $this->route('id');
         return [
-            "supplier_name" => ['required','string',Rule::unique('suppliers')->ignore($id,'supplier_id')],
-            'supplier_email' => ['required', 'string','email', Rule::unique('suppliers')->ignore($id, 'supplier_email')],
+            "supplier_name" => ['required','string',Rule::unique('suppliers')->ignore($supplier_id,'supplier_id')],
+            'supplier_email' => ['required', 'string','email', Rule::unique('suppliers')->ignore($supplier_id, 'supplier_id')],
             'supplier_phone' => 'digits:10|numeric',
             'contact_person' => 'string',
             'supplier_address' => 'string'

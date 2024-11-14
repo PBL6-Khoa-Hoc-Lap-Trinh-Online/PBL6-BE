@@ -104,6 +104,7 @@ Route::prefix('brands')->controller(BrandController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
+        Route::get('all', 'getAllByAdmin');
         Route::delete('{id}', 'delete');
     });
     Route::get('names', 'getNameBrand');
@@ -146,6 +147,7 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
         Route::post('update/{id}', 'update');
         Route::post('delete/{id}', 'delete');
         Route::post('delete-many', 'deleteMany');
+        Route::get('all', 'getAllByAdmin');
     });
     Route::get('names', 'getNameProduct');
     Route::get('{id}', 'get');
@@ -208,6 +210,7 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
 //statistic
 Route::prefix('statistics')->controller(StatisticController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('overview', 'getOverview');
         Route::get('revenue', 'getRevenue');
         Route::get('order', 'getOrders');
         Route::get('profit', 'getProfit');

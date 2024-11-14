@@ -40,9 +40,9 @@ class CategoryRepository extends BaseRepository implements CategoryInterface{
                 });
             })
             ->when(isset($filter->category_is_delete), function ($query) use ($filter) {
-                // if ($filter->category_is_delete !== 'all') {
+                if ($filter->category_is_delete !== 'all') {
                     $query->where('category.category_is_delete', $filter->category_is_delete);
-                // }
+                }
             })
             ->when(!empty($filter->orderBy), function ($query) use ($filter) {
                 $query->orderBy('category.' . $filter->orderBy, $filter->orderDirection);

@@ -35,7 +35,7 @@ class RequestUpdateProfileAdmin extends FormRequest
             // 'admin_phone' => 'digits:10|numeric',
             // 'admin_birthday' =>'date',
             // 'admin_gender'=>'in:1,0',
-            'admin_avatar'=>'file|image',
+            'admin_avatar'=> 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
     public function failedValidation(Validator $validator)

@@ -35,7 +35,7 @@ class RequestUpdateProfileUser extends FormRequest
             'user_phone' => 'digits:10|numeric',
             'user_birthday' =>'date',
             'user_gender'=>'in:1,0',
-            'user_avatar'=>'file|image',
+            'user_avatar'=> 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
     public function failedValidation(Validator $validator)

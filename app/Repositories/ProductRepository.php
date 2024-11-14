@@ -45,10 +45,10 @@ class ProductRepository extends BaseRepository implements ProductInterface{
                 $query->orderBy($filter->orderBy, $filter->orderDirection);
             })
             ->when(isset($filter->product_is_delete), function ($query) use ($filter) {
-                // if ($filter->product_is_delete === 'all') {
-                // } else {
+                if ($filter->product_is_delete === 'all') {
+                } else {
                     $query->where('products.product_is_delete', $filter->product_is_delete);
-                // }
+                }
             })
             ->when(!empty($filter->product_id), function ($query) use ($filter) {
                 $query->where('products.product_id', '=', $filter->product_id);
