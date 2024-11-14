@@ -13,6 +13,7 @@ class OrderDetail extends Model
         'order_detail_id',
         'order_id',
         'product_id',
+        'import_detail_id',
         'order_quantity',
         'order_price',
         'order_price_discount',
@@ -24,5 +25,8 @@ class OrderDetail extends Model
     }
     public function product(){
         return $this->belongsTo(Product::class);
+    }
+    public function importDetail(){
+        return $this->belongsTo(ImportDetail::class);
     }
 }

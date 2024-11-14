@@ -42,4 +42,8 @@ class Province extends Model
     {
         return $this->hasMany(District::class,  'province_id');
     }
+    public function receiverAddresses()
+    {
+        return $this->hasMany(ReceiverAddress::class, 'province_id');
+    }
 }

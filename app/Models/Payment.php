@@ -11,10 +11,17 @@ class Payment extends Model
     protected $primaryKey = 'payment_id';
     protected $fillable = [
         'payment_id',
-        'payment_method',
+        'order_id',
+        'payment_method_id',
+        'payment_amount',
+        'payment_status',
+        'payment_at'
     ];
     public $timestamps = false;
     public function order(){
-        return $this->hasOne(Order::class);
+        return $this->belongsTo(Order::class);
+    }
+    public function paymentMethod(){
+        return $this->belongsTo(PaymentMethod::class);
     }
 }

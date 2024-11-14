@@ -16,6 +16,9 @@ class ReceiverAddress extends Model
         'user_id',
         'receiver_name',
         'receiver_phone',
+        'province_id',
+        'district_id',
+        'ward_id',
         'receiver_address',
         'receiver_created_at',
         'receiver_updated_at',
@@ -25,5 +28,14 @@ class ReceiverAddress extends Model
     }
     public function order(){
         return $this->hasOne(Order::class);
+    }
+    public function province(){
+        return $this->belongsTo(Province::class);
+    }
+    public function district(){
+        return $this->belongsTo(District::class);
+    }
+    public function ward(){
+        return $this->belongsTo(Ward::class);
     }
 }

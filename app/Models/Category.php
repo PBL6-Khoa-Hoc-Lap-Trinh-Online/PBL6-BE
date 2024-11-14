@@ -13,6 +13,7 @@ class Category extends Model
     const UPDATED_AT = 'category_updated_at';
     protected $fillable = [
         'category_name',
+        'category_slug',
         'category_thumbnail',
         'category_parent_id',
         'category_type',

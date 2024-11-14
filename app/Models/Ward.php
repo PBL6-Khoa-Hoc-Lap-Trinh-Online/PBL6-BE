@@ -44,4 +44,8 @@ class Ward extends Model
     {
         return $this->belongsTo(District::class, 'district_id');
     }
+    public function receiverAddresses()
+    {
+        return $this->hasMany(ReceiverAddress::class);
+    }
 }

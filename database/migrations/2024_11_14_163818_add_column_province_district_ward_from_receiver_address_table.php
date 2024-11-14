@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('receiver_address', function (Blueprint $table) {
+        Schema::table('receiver_addresses', function (Blueprint $table) {
             $table->unsignedBigInteger('province_id')->after('receiver_phone')->nullable();
             $table->unsignedBigInteger('district_id')->after('province_id')->nullable();
             $table->unsignedBigInteger('ward_id')->after('district_id')->nullable();
@@ -43,7 +43,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('receiver_address', function (Blueprint $table) {
+        Schema::table('receiver_addresses', function (Blueprint $table) {
             $table->dropForeign(['province_id']);
             $table->dropForeign(['district_id']);
             $table->dropForeign(['ward_id']);

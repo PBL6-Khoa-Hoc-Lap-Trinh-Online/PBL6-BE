@@ -51,4 +51,8 @@ class District extends Model
     {
         return $this->hasMany(Ward::class, 'district_id');
     }
+    public function receiverAddresses()
+    {
+        return $this->hasMany(ReceiverAddress::class, 'district_id');
+    }
 }
