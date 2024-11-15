@@ -15,6 +15,8 @@ use App\Repositories\DiseaseRepository;
 use App\Http\Requests\RequestDiseaseAdd;
 use App\Http\Requests\RequestAddDiseaseCategory;
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 class DiseaseService
 {
     use APIResponse;
@@ -27,7 +29,19 @@ class DiseaseService
         DB::beginTransaction();
         try {
             $data = $request->all();
+
+            if($request->hasFile('disease_thumbnail')){
+                $image = $request->file('disease_thumbnail');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/avatar/disease_thumbnail',
+                    'resource_type' => 'auto',
+                ]);
+                $url = $uploadFile->getSecurePath();
+                $data = array_merge($request->all(), ['disease_thumbnail' => $url]);
+            }
+
             $disease = Disease::create($data);
+
             DB::commit();
             return $this->responseSuccessWithData($disease,'Thêm bệnh mới thành công', 200);
         } catch (Throwable $e) {
@@ -76,16 +90,39 @@ class DiseaseService
             if (!$disease) 
                 return $this->responseError('Không tìm thấy bệnh', 404);
             
+            $changeImage = false;
+            if($request->hasFile('disease_thumbnail')){
+                $image = $request->file('disease_thumbnail');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/avatar/disease_thumbnail',
+                    'resource_type' => 'auto',
+                ]);
+
+                // if($disease->disease_thumbnail){
+                //     $id_file = explode('.', implode('/', array_slice(explode('/', $disease->disease_thumbnail), 7)))[0];
+                //     $cloudinary = new Cloudinary();
+                //     $result = $cloudinary->api()->resource($id_file);
+                //     if ($result)
+                //         Cloudinary::destroy($id_file);
+                // }
+
+                $url = $uploadFile->getSecurePath();
+                $data = array_merge($request->all(), ['disease_thumbnail' => $url]);
+                $changeImage = true;
+            } 
+
+
             $disease->fill($data);
             $disease->disease_updated_at = now();
             $disease->save();
 
             //Cập nhật trong database CategoryDisease
-            CategoryDisease::where('disease_id', $id)->update([
-                'disease_name' => $disease->disease_name,
-                'disease_thumbnail' => $disease->disease_thumbnail,
-            ]);
-
+            if ($changeImage) {
+                CategoryDisease::where('disease_id', $id)->update([
+                    'disease_name' => $disease->disease_name,
+                    'disease_thumbnail' => $disease->disease_thumbnail,
+                ]);
+            }
 
             DB::commit();
             return $this->responseSuccessWithData($disease, 'Cập nhật bệnh thành công', 200);
@@ -131,6 +168,27 @@ class DiseaseService
             return $this->responseError($e->getMessage());
         }
     }
+
+    public function deleteDiseaseCategory(Request $request) {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $categoryDisease = CategoryDisease::where('category_disease_id', $data['category_disease_id'])->first();
+
+            if (!$categoryDisease) {
+                return $this->responseError('Không tìm thấy danh mục bệnh cần xóa', 400);
+            }
+    
+            $categoryDisease->delete();
+            
+            DB::commit();
+            return $this->responseSuccess('Xóa bệnh trong danh mục thành công', 200);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    
 
     public function getDiseaseCategory(Request $request, $id){
         try {
@@ -248,5 +306,30 @@ class DiseaseService
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
+    }
+
+    public function searchDisease(Request $request){
+        try {
+            $keyword = $request->input('keyword', '');
+            $per_page = $request->input('per_page', 20);
+
+            $diseases = Disease::where('disease_name', 'LIKE', "%$keyword%")
+                            ->orWhere('general_overview', 'LIKE', "%$keyword%")
+                            ->orWhere('symptoms', 'LIKE', "%$keyword%")
+                            ->orWhere('cause', 'LIKE', "%$keyword%")
+                            ->orWhere('risk_subjects', 'LIKE', "%$keyword%")
+                            ->orWhere('diagnosis', 'LIKE', "%$keyword%")
+                            ->orWhere('prevention', 'LIKE', "%$keyword%")
+                            ->orWhere('treatment_method', 'LIKE', "%$keyword%")
+                            ->select('disease_id', 'disease_name', 'disease_thumbnail','general_overview')
+                            ->paginate($per_page);
+            if ($diseases->isEmpty()) {
+                return $this->responseError('Không tìm thấy bệnh nào khớp với từ khóa', 404);
+            }
+            return $this->responseSuccessWithData($diseases, 'Danh sách bệnh tìm kiếm thành công', 200);
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+
     }
 }

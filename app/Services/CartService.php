@@ -54,6 +54,9 @@ class CartService
                     ];
                 }
             }
+            usort($cartProducts, function($a, $b) {
+                return $b['cart_id'] - $a['cart_id']; 
+            });
             return $this->responseSuccessWithData($cartProducts, "Lấy chi tiết giỏ hàng thành công", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());

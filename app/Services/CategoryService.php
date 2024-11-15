@@ -160,6 +160,7 @@ class CategoryService{
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
         }
+    }
     public function getNameCategory(Request $request){
         try{
             $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name')->get();

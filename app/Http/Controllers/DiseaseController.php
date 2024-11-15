@@ -33,11 +33,19 @@ class DiseaseController extends Controller
         return $this->diseaseService->addDiseaseCategory($request);
     }
 
+    public function deleteDiseaseCategory(Request $request){
+        return $this->diseaseService->deleteDiseaseCategory($request);
+    }
+
     public function getDiseaseCategory(Request $request, $id){
         return $this->diseaseService->getDiseaseCategory($request, $id);
     }
 
     public function getDiseaseUser(Request $request){
         return $this->diseaseService->getDiseaseUser($request);
+    }
+
+    public function searchDisease(Request $request) {
+        return $this->diseaseService->searchDisease($request);
     }
 }
