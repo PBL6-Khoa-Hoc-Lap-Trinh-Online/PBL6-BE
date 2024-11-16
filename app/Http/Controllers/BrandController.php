@@ -35,4 +35,7 @@ class BrandController extends Controller
     public function getAllByAdmin(Request $request){
         return $this->brandService->getAllByAdmin($request);
     }
+    public function getBySlug(Request $request,$slug){
+        return $this->brandService->getBySlug($request, $slug);
+    }
 }

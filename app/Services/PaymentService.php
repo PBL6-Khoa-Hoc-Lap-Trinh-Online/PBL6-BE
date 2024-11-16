@@ -2,10 +2,16 @@
 
 namespace App\Services;
 
+use App\Http\Requests\RequestAddPaymentMethod;
+use App\Http\Requests\RequestUpdatePaymentMethod;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Repositories\PaymentMethodRepository;
 use App\Traits\APIResponse;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PayOS\PayOS;
 use Throwable;
@@ -18,14 +24,158 @@ class PaymentService
         $this->payOSService = $payOSService;
     }
     use APIResponse;
+    public function add(RequestAddPaymentMethod $request){
+        DB::beginTransaction();
+        try{
+            $data = $request->all();
+            if ($request->hasFile('payment_method_logo')) {
+                $image = $request->file('payment_method_logo');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/thumbnail/brand_logo',
+                    'resource_type' => 'auto'
+                ]);
+                $url = $uploadFile->getSecurePath();
+                // Gán logo vào dữ liệu
+                $data['payment_method_logo'] = $url;
+            }
+            $payment_method=PaymentMethod::create($data);
+            DB::commit();
+            return $this->responseSuccessWithData($payment_method, "Thêm mới phương thức thành công!", 200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getPaymentMethod(Request $request, $id){
+        try{
+            $payment_method=PaymentMethod::find($id);
+            if(!$payment_method){
+                return $this->responseError("Không tìm thấy phương thức thanh toán!", 404);
+            }
+            return $this->responseSuccessWithData($payment_method, "Lấy thông tin phương thức thanh toán thành công!", 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function update(RequestUpdatePaymentMethod $request, $id){
+        DB::beginTransaction();
+        try{
+            $payment_method=PaymentMethod::find($id);
+            if(!$payment_method){
+                return $this->responseError("Không tìm thấy phương thức thanh toán!", 404);
+            }
+            if ($request->hasFile('payment_method_logo')) {
+                if ($payment_method->payment_method_logo) {
+                    $id_file = explode('.', implode('/', array_slice(explode('/', $payment_method->payment_method_logo), 7)))[0];
+                    Cloudinary::destroy($id_file);
+                }
+                $image = $request->file('payment_method_logo');
+                $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'pbl6_pharmacity/thumbnail/brand_logo',
+                    'resource_type' => 'auto'
+                ]);
+                $url = $uploadFile->getSecurePath();
+                $data = array_merge($request->all(), ['payment_method_logo' => $url]);
+                $payment_method->update($data);
+            } else {
+                $request['payment_method_logo'] = $payment_method->payment_method_logo;
+                $payment_method->update($request->all());
+            }
+            DB::commit();
+            return $this->responseSuccessWithData($payment_method, "Cập nhật phương thức thanh toán thành công!", 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function delete(Request $request, $id){
+        DB::beginTransaction();
+        try{
+            $payment_method=PaymentMethod::find($id);
+            if(!$payment_method){
+                return $this->responseError("Không tìm thấy phương thức thanh toán!", 404);
+            }
+            $status =!$payment_method->payment_is_active;
+            $payment_method->update(['payment_is_active'=>$status]);
+            $message = $status ? "Khôi phục phương thức thanh toán thành công!" : "Xóa phương thức thanh toán thành công!";
+            DB::commit();
+            return $this->responseSuccess($message, 200);
+        }
+        catch(Throwable $e){
+            DB::rollBack();
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getPaymentMethods(Request $request)
+    {
+        $orderBy = $request->typesort ?? 'payment_method_id';
+        switch ($orderBy) {
+            case 'payment_method_name':
+                $orderBy = 'payment_method_name';
+                break;
+            case 'new':
+                $orderBy = "payment_method_id";
+                break;
+            default:
+                $orderBy = 'payment_method_id';
+                break;
+        }
+        $orderDirection = $request->sortlatest ?? 'true';
+        switch ($orderDirection) {
+            case 'true':
+                $orderDirection = 'DESC';
+                break;
+            default:
+                $orderDirection = 'ASC';
+                break;
+        }
+        $filter = (object) [
+            'search' => $request->search ?? '',
+            'payment_is_active' => $request->payment_is_active ?? 'all',
+            'orderBy' => $orderBy,
+            'orderDirection' => $orderDirection,
+        ];
+        $paymentMethods = PaymentMethodRepository::getAll($filter);
+        if (!(empty($request->paginate))) {
+            $paymentMethods = $paymentMethods->paginate($request->paginate);
+        } else {
+            $paymentMethods = $paymentMethods->get();
+        }
+        return $paymentMethods;
+    }
+    public function getAllPaymentMethodByUser(Request $request){
+        try{
+            $payment_methods=$this->getPaymentMethods($request)->where('payment_is_active',1)->values();
+            return $this->responseSuccessWithData($payment_methods, "Lấy danh sách phương thức thanh toán thành công!", 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+    public function getAllPaymentMethodByAdmin(Request $request){
+        try{
+            $payment_methods=$this->getPaymentMethods($request)->values();
+            return $this->responseSuccessWithData($payment_methods, "Lấy danh sách phương thức thanh toán thành công!", 200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
+
     public function getAll(Request $request)
     {
         try {
             $payments = Payment::all();
-            return $this->responseSuccessWithData($payments, "Get all payments successfully", 200);
+            return $this->responseSuccessWithData($payments, "Quản lý thanh toán của các đơn hàng", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
+    }
+    public function createPayment(Request $request)
+    {
+        return Payment::create($request->all());
     }
 
     // public function handlePayOSWebhook(Request $request)

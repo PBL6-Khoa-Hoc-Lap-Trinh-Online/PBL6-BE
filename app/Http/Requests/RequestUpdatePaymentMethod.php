@@ -2,10 +2,11 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use App\Traits\APIResponse;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-class RequestUserUpdateAddress extends FormRequest
+use Illuminate\Contracts\Validation\Validator;
+class RequestUpdatePaymentMethod extends FormRequest
 {
     use APIResponse;
     /**
@@ -25,13 +26,11 @@ class RequestUserUpdateAddress extends FormRequest
      */
     public function rules()
     {
+        $id = $this->route('id');
         return [
-            'receiver_name' => 'string',
-            'receiver_phone' => 'digits:10|numeric',
-            'province_id' => 'exists:provinces,id',
-            'district_id' => 'exists:districts,id',
-            'ward_id' => 'exists:wards,id',
-            'receiver_address' => 'string',
+            'payment_method_name' => ['required', 'string', 'max:100', Rule::unique('payment_methods')->ignore($id, 'payment_method_id')],
+            'payment_method_description' => 'string',
+            'payment_method_logo' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }
     public function failedValidation(Validator $validator)

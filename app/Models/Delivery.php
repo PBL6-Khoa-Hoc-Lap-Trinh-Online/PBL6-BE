@@ -13,6 +13,7 @@ class Delivery extends Model
         'delivery_id',
         'order_id',
         'delivery_method_id',
+        'delivery_fee',
         'delivery_status',
         'delivery_tracking_number',
         'delivery_description',

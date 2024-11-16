@@ -39,4 +39,7 @@ class ProductController extends Controller
     public function getAllByAdmin(Request $request){
         return $this->productService->getAllByAdmin($request);
     }
+    public function getBySlug(Request $request, $slug){
+        return $this->productService->getBySlug($request, $slug);
+    }
 }

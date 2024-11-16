@@ -27,8 +27,8 @@ class RequestUserCheckoutCart extends FormRequest
     {
         return [
             "receiver_address_id" => 'required|exists:receiver_addresses,receiver_address_id',
-            "payment_id" => 'required|exists:payments,payment_id',
-            "delivery_id" => 'required|exists:deliveries,delivery_id',
+            "payment_id" => 'required|exists:payment_methods,payment_method_id',
+            "delivery_id" => 'required|exists:delivery_methods,delivery_method_id',
             "ids_cart" => 'required|array',
             "ids_cart.*" => 'required|integer',
         ];

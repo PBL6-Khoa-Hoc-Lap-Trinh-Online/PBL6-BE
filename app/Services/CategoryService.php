@@ -5,8 +5,10 @@ use App\Http\Requests\RequestDeleteCategory;
 use App\Http\Requests\RequestDeleteManyCategory;
 use App\Http\Requests\RequestUpdateCategory;
 use App\Models\Category;
+use App\Models\Product;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CategoryInterface;
+use App\Repositories\ProductInterface;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
@@ -18,8 +20,10 @@ use Throwable;
 class CategoryService{
     use APIResponse;
     protected CategoryInterface $categoryRepository;
-    public function __construct(CategoryInterface $categoryRepository){
+    protected ProductInterface $productRepository;
+    public function __construct(CategoryInterface $categoryRepository,ProductInterface $productRepository){
         $this->categoryRepository = $categoryRepository;
+        $this->productRepository = $productRepository;
     }
     public function add($request){
         DB::beginTransaction();
@@ -113,48 +117,52 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getListCategories(Request $request){
+        $orderBy = $request->typesort ?? 'category_id';
+        switch ($orderBy) {
+            case 'category_name':
+                $orderBy = 'category_name';
+                break;
+            case 'category_type':
+                $orderBy = 'category_type';
+                break;
+            case 'category_parent_id':
+                $orderBy = 'category_parent_id';
+                break;
+            case 'category_id':
+                $orderBy = 'category_id';
+                break;
+            default:
+                $orderBy = 'category_id';
+                break;
+        }
+        $orderDirection = $request->sortlatest ?? 'true';
+        switch ($orderDirection) {
+            case 'true':
+                $orderDirection = 'DESC';
+                break;
+            default:
+                $orderDirection = 'ASC';
+                break;
+        }
+        $filter = (object) [
+            'search' => $request->search ?? '',
+            'category_is_delete' => $request->category_is_delete ?? 'all',
+            'orderBy' => $orderBy,
+            'orderDirection' => $orderDirection,
+        ];
+        $categories = CategoryRepository::getAll($filter);
+        if (!(empty($request->paginate))) {
+            $categories = $categories->paginate($request->paginate);
+        } else {
+            $categories = $categories->get();
+        }
+        return $categories;
+    }
     public function getAll(Request $request)
     {
         try {
-            $orderBy = $request->typesort ?? 'category_id';
-            switch ($orderBy) {
-                case 'category_name':
-                    $orderBy = 'category_name';
-                    break;
-                case 'category_type':
-                    $orderBy = 'category_type';
-                    break;
-                case 'category_parent_id':
-                    $orderBy = 'category_parent_id';
-                    break;
-                case 'category_id':
-                    $orderBy = 'category_id';
-                    break;
-                default:
-                    $orderBy = 'category_id';
-                    break;
-            }
-            $orderDirection = $request->sortlatest ?? 'true';
-            switch ($orderDirection) {
-                case 'true':
-                    $orderDirection = 'DESC';
-                    break;
-                default:
-                    $orderDirection = 'ASC';
-                    break;
-            }
-            $filter = (object) [
-                'search' => $request->search ?? '',
-                'category_is_delete' => $request->category_is_delete ?? 'all',
-                'orderBy' => $orderBy,
-                'orderDirection' => $orderDirection,
-            ];
-            $categories = CategoryRepository::getAll($filter);
-            if (!(empty($request->paginate))) {
-                $categories = $categories->paginate($request->paginate);
-            } else {
-                $categories = $categories->get();
-            }
+            $categories=$this->getListCategories($request)->values();
             return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
@@ -169,29 +177,33 @@ class CategoryService{
             return $this->responseError($e->getMessage());
         }
     }
+    public function getCategory(Request $request , $id=null){
+        // If an ID is provided, retrieve the specific category and its children
+        if ($id !== null) {
+            $category = Category::where("category_id", $id)->first();
+
+            if (empty($category)) {
+                return $this->responseError("Không tìm thấy category", 404);
+            }
+            $categoryTree = $this->buildCategoryTree($category);
+            return $categoryTree;
+        } else {
+            $categories = Category::whereNull('category_parent_id')->get();
+            $categoryTree = [];
+            foreach ($categories as $category) {
+                $categoryTree[] = $this->buildCategoryTree($category);
+            }
+        }
+        return $categoryTree;
+    }
 
     public function getCategories(Request $request, $id = null)
     {
         try {
-            // If an ID is provided, retrieve the specific category and its children
-            if ($id !== null) {
-                $category = Category::where("category_id", $id)->first();
-
-                if (empty($category)) {
-                    return $this->responseError("Không tìm thấy category", 404);
-                }
-                $categoryTree = $this->buildCategoryTree($category);
-                return $this->responseSuccessWithData($categoryTree, "Lấy thông tin cây category thành công!", 200);
+             $categoryTree=$this->getCategory($request,$id);
+             return $this->responseSuccessWithData($categoryTree, "Lấy danh sách category thành công!", 200);
             }
-            else{
-                $categories = Category::whereNull('category_parent_id')->get();
-                $categoryTree = [];
-                foreach ($categories as $category) {
-                    $categoryTree[] = $this->buildCategoryTree($category);
-                }
-                return $this->responseSuccessWithData($categoryTree, "Lấy danh sách category thành công!", 200);
-            }
-        } catch (Throwable $e) {
+         catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
@@ -226,5 +238,32 @@ class CategoryService{
 
         return $categoryTree;
     }
-
+    public function getBySlug(Request $request,$slug){
+        try{
+            $category = Category::where('category_slug',$slug)->first();
+            if(empty($category)){
+                return $this->responseError("Không tìm thấy category",404);
+            }
+            $categories=$this->getCategory($request,$category->category_id);
+            if($categories["children"] == []){
+                $category_id = $category->category_id;
+                $categories['products'] = $this->productRepository->getAll((object)["category_id"=>$category_id,"typesort" => "product_name", "sortlatest" => "true", "product_is_delete"=> "0"])->get()->values();
+            }
+            else{
+                $category_name = $category->category_name;
+                if ($category->category_parent_id == null) {
+                    $categories['products'] = $this->productRepository->getAll((object)["typesort" => "product_name", "sortlatest" => "true", "product_is_delete", "0"])->get()->values();
+                }
+                else{
+                    $categories['products'] = $this->productRepository->getAll((object)["catergory_parent_name" => $category_name, "product_is_delete", "0"])->get()->values();
+                }
+                
+            }
+            $data = $categories;
+            return $this->responseSuccessWithData($data, "Lấy thông tin category thành công!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

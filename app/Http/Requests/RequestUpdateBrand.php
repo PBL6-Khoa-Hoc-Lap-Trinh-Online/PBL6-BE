@@ -30,7 +30,8 @@ class RequestUpdateBrand extends FormRequest
         $id = $this->route('id');
         return [
             'brand_name'=>['required','string','max:100',Rule::unique('brands')->ignore($id,'brand_id')],
-            'brand_logo' => 'image'
+            'brand_slug'=>['required','string','max:100',Rule::unique('brands')->ignore($id,'brand_id')],
+            'brand_logo' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ];
     }
     public function failedValidation(Validator $validator)

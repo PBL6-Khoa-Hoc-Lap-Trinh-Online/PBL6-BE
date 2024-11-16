@@ -30,6 +30,7 @@ class RequestAddProduct extends FormRequest
             'brand_id'=>'required|integer|exists:brands,brand_id',
             'category_id'=>'required|integer|exists:categories,category_id',
             'product_name'=>'required|string|max:100',
+            'product_slug' => 'required|string|unique:products,product_slug',
             'product_price' => ['required', 'numeric', 'bail', 'regex:/^\d+(\.\d{1,2})?$/'],
             'product_images' => ['nullable', 'array',new ProductImage()],
             'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',

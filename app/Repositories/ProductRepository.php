@@ -19,6 +19,9 @@ class ProductRepository extends BaseRepository implements ProductInterface{
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('categories.category_name','LIKE', '%' . $filter->search . '%')
                         ->orWhere('parents.category_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('parents.category_slug', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('categories.category_slug', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('brands.brand_slug', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('brand_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('product_uses', 'LIKE', '%' . $filter->search . '%');
                 });
@@ -29,8 +32,17 @@ class ProductRepository extends BaseRepository implements ProductInterface{
             ->when(!empty($filter->category_name), function ($query) use ($filter) {
                 return $query->where('categories.category_name', '=', $filter->category_name);
             })
+            ->when(!empty($filter->category_parent_id), function ($query) use ($filter) {
+                return $query->where('parents.category_id', '=', $filter->category_parent_id);
+            })
+            ->when(!empty($filter->category_id), function ($query) use ($filter) {
+                return $query->where('categories.category_id', '=', $filter->category_id);
+            })
             ->when(!empty($filter->brand_names), function ($query) use ($filter) {
                 return $query->whereIn('brands.brand_name', $filter->brand_names);
+            })
+            ->when(!empty($filter->brand_id), function ($query) use ($filter) {
+                return $query->whereIn('brands.brand_id', $filter->brand_id);
             })
             ->when(!empty($filter->price_from) || !empty($filter->price_to), function ($query) use ($filter) {
                 if (!empty($filter->price_from) && empty($filter->price_to)) {

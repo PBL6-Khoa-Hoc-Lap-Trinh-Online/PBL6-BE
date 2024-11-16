@@ -27,8 +27,10 @@ use App\Repositories\OrderInterface;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\CartInterface;
 use App\Repositories\CartRepository;
-use App\Repositories\CartDetailInterface;
-use App\Repositories\CartDetailRepository;
+use App\Repositories\PaymentInterface;
+use App\Repositories\PaymentRepository;
+use App\Repositories\DeliveryInterface;
+use App\Repositories\DeliveryRepository;
 use App\Repositories\DiseaseInterface;
 use App\Repositories\DiseaseRepository;
 
@@ -54,6 +56,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OrderInterface::class, OrderRepository::class);
         $this->app->bind(CartInterface::class, CartRepository::class);
         $this->app->bind(DiseaseInterface::class, DiseaseRepository::class);
+        $this->app->bind(PaymentInterface::class, PaymentRepository::class);
+        $this->app->bind(DeliveryInterface::class, DeliveryRepository::class);
 
     }
 

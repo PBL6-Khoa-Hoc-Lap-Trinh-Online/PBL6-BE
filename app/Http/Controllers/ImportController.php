@@ -22,5 +22,7 @@ class ImportController extends Controller
     public function getImportDetails(Request $request,$id){
         return $this->importService->getImportDetails($request,$id);
     }
-    
+    // public function update(RequestAddImport $request,$id){
+    //     return $this->importService->update($request,$id);
+    // }
 }

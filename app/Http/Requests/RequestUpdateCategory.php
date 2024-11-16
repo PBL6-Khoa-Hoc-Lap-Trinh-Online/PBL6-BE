@@ -29,6 +29,7 @@ class RequestUpdateCategory extends FormRequest
         $id = $this->route('id');
         return [
             'category_name' => ['required', 'string', Rule::unique('categories')->ignore($id, 'category_id')],
+            'category_slug' => ['required', 'string', Rule::unique('categories')->ignore($id, 'category_id')],
             'category_thumbnail' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'category_parent_id' => 'nullable|exists:categories,category_id',
             'category_type' => 'string',

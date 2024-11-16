@@ -27,6 +27,7 @@ class RequestCreateCategory extends FormRequest
     {
         return [
             "category_name" => "required|string|unique:categories",
+            "category_slug" => "required|string|unique:categories",
             "category_thumbnail"=>'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             "category_parent_id"=>"nullable|exists:categories,category_id",
             "category_type"=>'required|string',

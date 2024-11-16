@@ -29,6 +29,9 @@ class RequestAddReceiverAddress extends FormRequest
         return [
             'receiver_name'=>'required|string',
             'receiver_phone'=>'required|digits:10|numeric',
+            'province_id' => 'required|exists:provinces,id',
+            'district_id' => 'required|exists:districts,id',
+            'ward_id' => 'required|exists:wards,id',
             'receiver_address'=>'required|string',
         ];
     }

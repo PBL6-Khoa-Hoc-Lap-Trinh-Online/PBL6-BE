@@ -28,7 +28,8 @@ class RequestCreateBrand extends FormRequest
     {
         return [
             "brand_name" =>'required|string|unique:brands',
-            "brand_logo"=>'image',
+            "brand_slug" =>'required|string|unique:brands',
+            "brand_logo"=> 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
     public function failedValidation(Validator $validator)

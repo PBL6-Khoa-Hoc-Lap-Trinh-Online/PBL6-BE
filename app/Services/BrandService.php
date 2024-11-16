@@ -6,8 +6,10 @@ use App\Http\Requests\RequestCreateBrand;
 use App\Http\Requests\RequestDeleteBrand;
 use App\Http\Requests\RequestUpdateBrand;
 use App\Models\Brand;
+use App\Models\Product;
 use App\Repositories\BrandInterface;
 use App\Repositories\BrandRepository;
+use App\Repositories\ProductInterface;
 use Throwable;
 use App\Traits\APIResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -17,8 +19,10 @@ use Illuminate\Support\Facades\Log;
 class BrandService{
     use APIResponse;
     protected BrandInterface $brandRepository;
-    public function __construct(BrandInterface $brandRepository){
+    protected ProductInterface $productRepository;
+    public function __construct(BrandInterface $brandRepository,ProductInterface $productRepository){
         $this->brandRepository = $brandRepository;
+        $this->productRepository = $productRepository;
     }
     public function add(RequestCreateBrand $request)
     {
@@ -41,7 +45,8 @@ class BrandService{
             // dd($brand);
             DB::commit();
             // Log::info('Brand creation successful. Returning response...');
-            return $this->responseSuccessWithData($brand,'Thêm brand mới thành công!',201);
+            $data = $brand;
+            return $this->responseSuccessWithData($data,'Thêm brand mới thành công!',201);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -118,6 +123,9 @@ class BrandService{
             case 'brand_name':
                 $orderBy = 'brand_name';
                 break;
+            case 'brand_slug':
+                $orderBy = 'brand_slug';
+                break;
             case 'new':
                 $orderBy = "brand_id";
                 break;
@@ -150,7 +158,7 @@ class BrandService{
     }
     public function getAll(Request $request){
         try{
-            $brands = $this->getBrands($request)->where('brand_is_delete',0);
+            $brands = $this->getBrands($request)->where('brand_is_delete',0)->values();
             return $this->responseSuccessWithData($brands, "Lấy danh sách brand thành công!");
         }
         catch(Throwable $e){
@@ -159,7 +167,7 @@ class BrandService{
     }
     public function getAllByAdmin(Request $request){
         try{
-            $brands = $this->getBrands($request);
+            $brands = $this->getBrands($request)->values();
             return $this->responseSuccessWithData($brands, "Lấy danh sách brand thành công!");
         }
         catch(Throwable $e){
@@ -175,5 +183,22 @@ class BrandService{
             return $this->responseError($e->getMessage());
         }
     }
-    
+    public function getBySlug(Request $request,$slug){
+        try{
+            $brand = Brand::where('brand_slug',$slug)->first();
+            if(empty($brand)){
+                return $this->responseError("Không tìm thấy brand",404);
+            }
+            // dump($brand);
+            $brand_id=$brand->brand_id;
+            // $brand['products'] = $this->productRepository->getAll((object)["brand_names"=>$brand_id,"typesort" => "product_name", "sortlatest" => "true", "product_is_delete"=> "0"])->get()->values();
+            // $brand['products'] = $this->productRepository->getAll((object)["brand_id" => $brand_id])->get();
+            $brand['products'] = Product::where('brand_id',$brand_id)->where('product_is_delete',0)->get();
+            $data = $brand;
+            return $this->responseSuccessWithData($data, "Lấy thông tin brand thành công!",200);
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
 }

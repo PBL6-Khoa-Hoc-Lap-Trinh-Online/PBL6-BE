@@ -40,7 +40,7 @@ class ProductService{
     public function getAll($request){
         try {
             $products = $this->getProducts($request);
-            $products=$products->where('product_is_delete','0');
+            $products=$products->where('product_is_delete','0')->values();
             return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
@@ -82,7 +82,10 @@ class ProductService{
             'search' => $request->search ?? '',
             'category_name' => $request->category_name ?? '',
             'category_parent_name'=>$request->category_parent_name ?? '',
+            'category_id' => $request->category_id ?? '',
+            'category_parent_id' => $request->category_parent_id ?? '',
             'brand_names' =>$request->brand_names ?? [],
+            'brand_id' => $request->brand_id ?? '',
             'price_from' =>$request->price_from ?? '',
             'price_to' =>$request->price_to ?? '',
             'orderBy' => $orderBy,
@@ -102,8 +105,8 @@ class ProductService{
     public function getAllByAdmin(Request $request)
     {
         try {
-            $products = $this->getProducts($request);
-            return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
+            $data = $this->getProducts($request)->values();
+            return $this->responseSuccessWithData($data, 'Danh sách sản phẩm!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -146,7 +149,8 @@ class ProductService{
             }
             $product = Product::create($data);
             DB::commit();
-            return $this->responseSuccessWithData($product, 'Thêm sản phẩm mới thành công!', 201);
+            $data = $product;
+            return $this->responseSuccessWithData($data, 'Thêm sản phẩm mới thành công!', 201);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -206,7 +210,8 @@ class ProductService{
                 $product->update($request->all());
             }
             DB::commit();
-            return $this->responseSuccessWithData($product, "Cập nhật sản phẩm thành công!");
+            $data=$product;
+            return $this->responseSuccessWithData($data, "Cập nhật sản phẩm thành công!");
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -263,7 +268,23 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
-
+    public function getBySlug(Request $request, $slug){
+        try{
+            $product = Product::where('product_slug',$slug)->first();
+            if(empty($product)){
+                return $this->responseError("Sản phẩm không tồn tại!",404);
+            }
+            $id=$product->product_id;
+            $product = $this->productRepository->getAll((object)['product_id' => $id])->first();
+            $category_id = $product->category_id;
+            $product['same_category']=$this->productRepository->getAll((object)['category_id' => $category_id,'product_is_delete'=>'0'])->where('product_id','!=',$id)->get();
+            $data = $product;
+            return $this->responseSuccessWithData($data, "Lấy sản phẩm thành công!");
+        }
+        catch(Throwable $e){
+            return $this->responseError($e->getMessage());
+        }
+    }
   
 
 }

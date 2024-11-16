@@ -33,9 +33,11 @@ class ImportService{
                     'import_id' => $import->import_id,
                     'product_id' => $importDetail['product_id'],
                     'import_quantity' => $importDetail['import_quantity'],
+                    'retaining_quantity'=> $importDetail['import_quantity'],
                     'import_price' => $importDetail['import_price'],
                     'product_total_price' => $importDetail['import_quantity'] * $importDetail['import_price'],
                     'product_expiry_date' => $importDetail['product_expiry_date'],
+                    'entry_date' => now(),
                 ];
                 $product = Product::find($importDetail['product_id']);
                 $product->update([
@@ -132,4 +134,45 @@ class ImportService{
             return $this->responseError($e->getMessage());
         }
     }
+    // public function update(RequestAddImport $request,$id){
+    //     DB::beginTransaction();
+    //     try{
+    //         $import = Import::find($id);
+    //         if(empty($import)){
+    //             return $this->responseError('Không tìm thấy phiếu nhập kho này!');
+    //         }
+    //         $importTotal = 0;
+    //         $importDetails = [];
+    //         foreach($request->import_details as $importDetail){
+    //             $detail = [
+    //                 'import_id' => $import->import_id,
+    //                 'product_id' => $importDetail['product_id'],
+    //                 'import_quantity' => $importDetail['import_quantity'],
+    //                 'remaining_quantity'=> $importDetail['import_quantity'],
+    //                 'import_price' => $importDetail['import_price'],
+    //                 'product_total_price' => $importDetail['import_quantity'] * $importDetail['import_price'],
+    //                 'product_expiry_date' => $importDetail['product_expiry_date'],
+    //                 'entry_date' => $import->import_date,
+    //             ];
+    //             $product = Product::find($importDetail['product_id']);
+    //             $product->update([
+    //                 'product_quantity' => $product->product_quantity + $importDetail['import_quantity'],
+    //             ]);
+    //             $importTotal += $detail['product_total_price'];
+    //             $import_detail = ImportDetail::create($detail);
+    //             $importDetails[] = $import_detail;
+    //         }
+    //         $import->update(['import_total_amount' => $importTotal]);
+    //         DB::commit();
+    //         $data = [
+    //             'import' => $import,
+    //             'import_details' => $importDetails,
+    //         ];
+    //         return $this->responseSuccessWithData($data,'Nhập kho thành công!',200);
+    //     }
+    //     catch(Throwable $e){
+    //         DB::rollBack();
+    //         return $this->responseError($e->getMessage());
+    //     }
+    // }
 }
