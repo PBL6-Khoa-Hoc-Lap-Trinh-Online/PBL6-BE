@@ -105,8 +105,8 @@ Route::prefix('brands')->controller(BrandController::class)->group(function () {
         Route::get('all', 'getAllByAdmin');
         Route::delete('{id}', 'delete');
     });
-    Route::get('{slug}', 'getBySlug');
     Route::get('names', 'getNameBrand');
+    Route::get('slug/{slug}', 'getBySlug');
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
 });
@@ -132,8 +132,8 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
         Route::post('delete-many', 'deleteMany');
         Route::get('all', 'getAll');
     });
-    Route::get('{slug}', 'getBySlug');
     Route::get('names', 'getNameCategory');
+    Route::get('slug/{slug}', 'getBySlug');
     Route::get('{id}', 'get');//get chính nó nếu không có danh sách con
     Route::get('', 'getAllCategories');
     
@@ -149,8 +149,8 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
         Route::post('delete-many', 'deleteMany');
         Route::get('all', 'getAllByAdmin');
     });
-    Route::get('{slug}', 'getBySlug');
     Route::get('names', 'getNameProduct');
+    Route::get('slug/{slug}', 'getBySlug');
     Route::get('{id}', 'get');
     Route::get('', 'getAll');
 });
@@ -185,32 +185,49 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::post('update-status/{id}', 'updateStatus');
     });
 });
-
-
-
-//payment
-Route::prefix('payments')->controller(PaymentController::class)->group(function () {
+Route::prefix('payment-methods')->controller(PaymentController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::get('all', 'getAllByAdmin');
         Route::get('{id}', 'getPaymentMethod');
         Route::delete('{id}', 'delete');
-       
+    });
+    Route::get('', 'getAll');
+});
+
+
+//payment
+Route::prefix('payments')->controller(PaymentController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('update/{id}', 'updateStatus');
+        Route::get('all', 'managePayment');
+        Route::get('{id}', 'getPaymentDetail');  
     });
     Route::post('webhook', 'handlePayOSWebhook');
     Route::get('', 'getAll');
     
 });
+//delivery-methods
+Route::prefix('delivery-methods')->controller(DeliveryController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('add', 'add');
+        Route::post('update/{id}', 'updateStatus');
+        Route::get('all', 'getAllByAdmin');
+        Route::get('{id}', 'get');
+        Route::delete('{id}', 'delete');
+    });
+    Route::get('', 'getAll');
+});
+
+
 
 //delivery
 Route::prefix('deliveries')->controller(DeliveryController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
-        Route::get('all', 'getAllByAdmin');
-        Route::get('{id}', 'getDeliveryMethod');
-        Route::delete('{id}', 'delete');
+        Route::post('update/{id}', 'updateStatus');
+        Route::get('all', 'manageDelivery');
+        Route::get('{id}', 'getDeliveryDetail');
     });
     Route::get('', 'getAll');
 });

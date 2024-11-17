@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use App\Models\Import;
+use App\Models\ImportDetail;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Repositories\OrderRepository;
 use App\Traits\APIResponse;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class StatisticService
 {
@@ -106,6 +109,92 @@ class StatisticService
             return $this->responseError($e->getMessage());
         }
     }
+    public function getProfitRevenue(Request $request){
+        $type=$request->type ?? 'year';
+        $year = $request->year ?? Carbon::now();
+        $month = $request->month ?? Carbon::now();
+        $day = $request->day ?? Carbon::now();
+        $startDate = $request->start_date ?? Carbon::now();
+        $endDate = $request->end_date ?? Carbon::now();
+        if($type == 'year'){
+            $data=$this->getProfitRevenueYear($year);
+        }
+        else if($type == 'range'){
+            $data=$this->getProfitRevenueRange($startDate,$endDate);
+        }
+        return $this->responseSuccessWithData($data, 'Lấy doanh thu và lợi nhuận thành công!', 200);
+    }
+    public function getProfitRevenueRange($startDate,$endDate){
+        $orders=OrderRepository::getAll((object)['order_status' => 'delivered','from_date'=>$startDate,'to_date'=>$endDate])
+                ->get();
+        $revenueDaily=[];
+        $profitDaily=[];
+        $startDate = Carbon::parse($startDate); // Đảm bảo startDate là một đối tượng Carbon
+        $endDate = Carbon::parse($endDate); // Đảm bảo endDate là một đối tượng Carbon
+        // Tạo danh sách các ngày giữa startDate và endDate
+        $dates = [];
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $dates[] = $date->toDateString();
+        }
+        // Khởi tạo các ngày trong mảng revenueDaily và profitDaily
+        foreach ($dates as $date) {
+            if (!array_key_exists($date, $revenueDaily)) {
+                $revenueDaily[$date] = 0;
+                $profitDaily[$date] = 0;
+            }
+        }
+        foreach($orders as $order){
+            $orderDetails=OrderRepository::getDetailOrder($order->order_id);
+            foreach($orderDetails as $orderDetail){
+                $importDetail=ImportDetail::where('product_id',$orderDetail->product_id)
+                                ->where('import_detail_id',$orderDetail->import_detail_id)
+                                ->first();
+                $importPrice=$importDetail->import_price;
+                $profit=$orderDetail->order_total_price-$importPrice*$orderDetail->order_quantity;
+                $date = Carbon::parse($order->order_created_at)->toDateString(); // Lấy ngày (YYYY-MM-DD)
+                $orderDate = Carbon::parse($order->order_created_at)->toDateString(); // Ngày tạo đơn hàng
+
+                // Nếu ngày của đơn hàng nằm trong khoảng ngày
+                if (in_array($orderDate, $dates)) {
+                    $revenueDaily[$orderDate] += $orderDetail->order_total_price;
+                    $profitDaily[$orderDate] += $profit;
+                }
+                
+                
+            }
+        }
+        ksort($revenueDaily);
+        ksort($profitDaily);
+        $data=[
+            'revenue_daily'=>$revenueDaily,
+            'profit_daily'=>$profitDaily
+        ];
+        return $data;
+    }
+    public function getProfitRevenueYear($year){
+        $monthlyRevenue =array_fill(1, 12, 0);
+        $monthlyProfit =array_fill(1, 12, 0);
+        $orders = OrderRepository::getAll((object)['order_status' => 'delivered'])->whereYear('order_created_at', $year)->get();
+        foreach($orders as $order){
+            $orderDetails = OrderRepository::getDetailOrder($order->order_id);
+            foreach($orderDetails as $orderDetail){
+                $importDetail = ImportDetail::where('product_id', $orderDetail->product_id)
+                                ->where('import_detail_id', $orderDetail->import_detail_id)
+                                ->first();
+                $importPrice = $importDetail->import_price;
+                $profit = $orderDetail->order_total_price - $importPrice * $orderDetail->order_quantity;
+                $date = Carbon::parse($order->order_created_at);
+                $month = $date->month;
+                $monthlyRevenue[$month] += $orderDetail->order_total_price;
+                $monthlyProfit[$month] += $profit;
+            }
+        }
+        $data = [
+            'monthly_revenue' => $monthlyRevenue,
+            'monthly_profit' => $monthlyProfit
+        ];
+        return $data;
+    }
     public function getProfit(Request $request)
     {
         try {
@@ -120,117 +209,22 @@ class StatisticService
             } else {
                 $endDate = Carbon::now();
             }
-            // // Profit by product
-            $importProduct = Import::selectRaw('product_id, MAX(import_details.import_price) as product_price')
-                ->join('import_details', 'imports.import_id', '=', 'import_details.import_id')
-                ->groupBy('product_id')
-                ->get();
-
-            $orderProduct = Order::where('order_status', 'delivered')
+        
+            $orderDetail = Order::where('order_status', 'delivered')
                 ->whereDate('order_created_at', '>=', $startDate)
                 ->whereDate('order_created_at', '<=', $endDate)
                 ->join('order_details', 'orders.order_id', '=', 'order_details.order_id')
-                ->selectRaw('product_id,sum(order_quantity) as quantity, sum(order_total_price) as total')
-                ->groupBy('product_id')
+                ->selectRaw('product_id,order_total_price,order_quantity,import_detail_id,order_created_at  as date')
+                ->groupBy('date')
+                ->orderBy('date')
                 ->get();
-
-            // return $this->responseSuccessWithData($importProduct, 'Lấy lợi nhuận thành công!', 200);
-
             $profitByProduct = [];
-            $temp = [];
-            foreach ($orderProduct as $product) {
-                $importTotal = $importProduct->where('product_id', $product->product_id)->first();
-                $quantity = $product->quantity;
+            forEach($orderDetail as $order_detail){
+                $importDetail = ImportDetail::where('product_id',$order_detail->product_id)->where('import_detail_id', $order_detail->import_detail_id)->first();
+                $import_price = $importDetail->import_price;
+                $profit = $order_detail->order_total_price - $import_price * $order_detail->order_quantity;
 
-                $profit = $product->total - $importTotal->product_price * $quantity;
-                $profitByProduct[] = [
-                    'product_id' => $product->product_id,
-                    'profit' => $profit,
-                ];
             }
-
-            // // Profit by month
-            // $monthlyImport = Import::whereBetween('import_created_at', [$startDate, $endDate])
-            //     ->selectRaw('YEAR(import_created_at) as year, MONTH(import_created_at) as month, sum(import_total_amount) as total')
-            //     ->groupBy('year', 'month')
-            //     ->get();
-            // $monthlyOrder = Order::where('order_status', 'delivered')
-            // ->where('payment_status', 'paid')
-            // ->whereBetween('order_created_at', [$startDate, $endDate])
-            //     ->selectRaw('YEAR(order_created_at) as year, MONTH(order_created_at) as month, sum(order_total_amount) as total')
-            //     ->groupBy('year', 'month')
-            //     ->get();
-
-            // $monthlyProfit = [];
-            // foreach ($monthlyOrder as $order) {
-            //     $importTotal = $monthlyImport->where('year', $order->year)
-            //     ->where('month', $order->month)
-            //     ->sum('total') ?? 0;
-
-            //     $profit = $order->total - $importTotal;
-            //     $monthlyProfit[] = [
-            //         'year' => $order->year,
-            //         'month' => $order->month,
-            //         'total' => $profit,
-            //     ];
-            // }
-
-            // // Profit by quarter
-            // $quarterlyProfit = [];
-            // $quarterlyOrder = Order::where('order_status', 'delivered')
-            // ->where('payment_status', 'paid')
-            // ->whereBetween('order_created_at', [$startDate, $endDate])
-            //     ->selectRaw('YEAR(order_created_at) as year, QUARTER(order_created_at) as quarter, sum(order_total_amount) as total')
-            //     ->groupBy('year', 'quarter')
-            //     ->get();
-
-            // foreach ($quarterlyOrder as $order) {
-            //     $importTotal = $monthlyImport->where('year', $order->year)
-            //     ->whereIn('month', [($order->quarter - 1) * 3 + 1, ($order->quarter - 1) * 3 + 2, ($order->quarter - 1) * 3 + 3])
-            //     ->sum('total') ?? 0;
-
-            //     $profit = $order->total - $importTotal;
-            //     $quarterlyProfit[] = [
-            //         'year' => $order->year,
-            //         'quarter' => $order->quarter,
-            //         'total' => $profit,
-            //     ];
-            // }
-
-            // // Profit by year
-            // $yearlyImport = Import::whereBetween('import_created_at', [$startDate, $endDate])
-            //     ->selectRaw('YEAR(import_created_at) as year, sum(import_total_amount) as total')
-            //     ->groupBy('year')
-            //     ->get();
-            // $yearlyOrder = Order::where('order_status', 'delivered')
-            // ->where('payment_status', 'paid')
-            // ->whereBetween('order_created_at', [$startDate, $endDate])
-            //     ->selectRaw('YEAR(order_created_at) as year, sum(order_total_amount) as total')
-            //     ->groupBy('year')
-            //     ->get();
-
-            // $yearlyProfit = [];
-            // foreach ($yearlyOrder as $order) {
-            //     $importTotal = $yearlyImport->where('year', $order->year)->sum('total') ?? 0;
-            //     $profit = $order->total - $importTotal;
-            //     $yearlyProfit[] = [
-            //         'year' => $order->year,
-            //         'total' => $profit,
-            //     ];
-            // }
-
-
-
-            // $data = [
-            //     'total_profit' => $d,
-            //     'daily_profit' => $dailyProfit,
-            //     'monthly_profit' => $monthlyProfit,
-            //     'quarterly_profit' => $quarterlyProfit,
-            //     'yearly_profit' => $yearlyProfit,
-            //     'profit_by_product' => $profitByProduct,
-            // ];
-
-            // return $this->responseSuccessWithData($temp, 'Lấy lợi nhuận thành công!', 200);
 
             return $this->responseSuccessWithData($profitByProduct, 'Lấy lợi nhuận thành công!', 200);
         } catch (Throwable $e) {

@@ -18,8 +18,8 @@ class VietnamZoneService
     public function getProvinces()
     {
         try {
-            $province = Province::all();
-            return $this->responseSuccessWithData($province,'Lấy dữ liệu tỉnh/thành phố thành công',200);
+            $HTTP_RAW_POST_DATA = Province::all();
+            return $this->responseSuccessWithData($data,'Lấy dữ liệu tỉnh/thành phố thành công',200);
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage());
@@ -29,8 +29,8 @@ class VietnamZoneService
     public function getDistrictsByProvinceId($provinceId)
     {
         try {
-            $district = District::whereProvinceId($provinceId)->get();
-            return $this->responseSuccessWithData($district,'Lấy dữ liệu huyện/quận thành công',200);
+            $data = District::whereProvinceId($provinceId)->get();
+            return $this->responseSuccessWithData($data,'Lấy dữ liệu huyện/quận thành công',200);
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage());
@@ -40,8 +40,8 @@ class VietnamZoneService
     public function getWardsByDistrictId($districtId)
     {
         try {
-            $ward = Ward::whereDistrictId($districtId)->get();
-            return $this->responseSuccessWithData($ward,'Lấy dữ liệu xã/phường/thị trấn thành công',200);
+            $data = Ward::whereDistrictId($districtId)->get();
+            return $this->responseSuccessWithData($data,'Lấy dữ liệu xã/phường/thị trấn thành công',200);
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage());

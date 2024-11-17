@@ -37,10 +37,12 @@ class CategoryService{
                 ]);
                 $url = $uploadFile->getSecurePath();
                 $data['category_thumbnail'] = $url;
+                $data['category_created_at'] = now();
             }
             $category = Category::create($data);
             DB::commit();
-            return $this->responseSuccessWithData($category, 'Thêm category mới thành công!', 201);
+            $data=$category;
+            return $this->responseSuccessWithData($data, 'Thêm category mới thành công!', 201);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -65,15 +67,16 @@ class CategoryService{
                    'resource_type' => 'auto'
                ]);
                $url = $uploadFile->getSecurePath();
-               $data = array_merge($request->all(),['category_thumbnail'=>$url]);
+               $data = array_merge($request->all(),['category_thumbnail'=>$url,'category_updated_at'=>now()]);
                $category->update($data);
            }
            else{
                 $request['category_thumbnail'] = $category->category_thumbnail;
-                $category->update($request->all());
+                $category->update($request->all(),['category_updated_at'=>now()]);
            }
             DB::commit();
-            return $this->responseSuccessWithData($category, 'Cập nhật category thành công!', 200);
+            $data=$category;
+            return $this->responseSuccessWithData($data, 'Cập nhật category thành công!', 200);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -88,7 +91,7 @@ class CategoryService{
             if (empty($category)) {
                 return $this->responseError("Không tìm thấy category", 404);
             }
-            $category->update(['category_is_delete'=> $request->category_is_delete]);
+            $category->update(['category_is_delete'=> $request->category_is_delete, 'category_updated_at' => now()]);
             DB::commit();
             $request->category_is_delete == 1 ? $message = "Xoá category thành công!" : $message = "Khôi phục category thành công!";
             return $this->responseSuccess($message ,200);
@@ -106,7 +109,7 @@ class CategoryService{
                 return $this->responseError("Không tìm thấy category",404);
             }
             foreach($categories as $index => $category){
-                $category->update(['category_is_delete'=>$request->category_is_delete]);
+                $category->update(['category_is_delete'=>$request->category_is_delete,'category_updated_at'=>now()]);
             }
             DB::commit();
             $request->category_is_delete == 1 ? $message = "Xoá các category thành công!" : $message = "Khôi phục các category thành công!";
@@ -162,16 +165,23 @@ class CategoryService{
     public function getAll(Request $request)
     {
         try {
-            $categories=$this->getListCategories($request)->values();
-            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!", 200);
+            $data=$this->getListCategories($request)->values();
+            return $this->responseSuccessWithData($data, "Lấy danh sách category thành công!", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
     public function getNameCategory(Request $request){
         try{
-            $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name')->get();
-            return $this->responseSuccessWithData($categories, "Lấy danh sách category thành công!",200);
+            $categories = Category::where('category_is_delete',0)->whereNotNull('category_parent_id')->select('category_id','category_name');
+            if($request->paginate){
+                $categories = $categories->paginate($request->paginate);
+            }
+            else{
+                $categories = $categories->get();
+            }
+            $data=$categories;
+            return $this->responseSuccessWithData($data, "Lấy danh sách category thành công!",200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
@@ -200,8 +210,8 @@ class CategoryService{
     public function getCategories(Request $request, $id = null)
     {
         try {
-             $categoryTree=$this->getCategory($request,$id);
-             return $this->responseSuccessWithData($categoryTree, "Lấy danh sách category thành công!", 200);
+             $data=$this->getCategory($request,$id);
+             return $this->responseSuccessWithData($data, "Lấy danh sách category thành công!", 200);
             }
          catch (Throwable $e) {
             return $this->responseError($e->getMessage());

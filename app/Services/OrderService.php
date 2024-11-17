@@ -107,7 +107,7 @@ class OrderService
             $orderDetails[] = OrderDetail::create($orderDetailData);
             $total_amount += $product_price *  $import_quantity;
         }
-        $order->update(['order_total_amount' => ($order->order_total_amount+ $total_amount)]);
+        $order->update(['order_total_amount' => ($order->order_total_amount+ $total_amount),'order_updated_at' => now()]);
         // dump($order);
         return $orderDetails;
     }
@@ -116,6 +116,7 @@ class OrderService
         $product->update([
             'product_quantity' => $product->product_quantity - $quantity,
             'product_sold' => $product->product_sold + $quantity,
+            'product_updated_at' => now(),
         ]);
     }
   
@@ -163,7 +164,8 @@ class OrderService
                 return $this->handlePayOSPayment($order, $order_total_amount);
             }
             $order['order_detail'] = $this->groupOrderDetailByProductId($orderDetail);
-            return $this->responseSuccessWithData($order, 'Đặt hàng thành công!', 200);
+            $data = $order;
+            return $this->responseSuccessWithData($data, 'Đặt hàng thành công!', 200);
         } catch (Throwable $th) {
             DB::rollBack();
             return $this->responseError($th->getMessage(), 400);
@@ -216,7 +218,7 @@ class OrderService
             $this->createDeliveriesRecord($order, $request->delivery_id, $delivery_fee);
             $order = Order::where('order_id', $order->order_id)->first();
             $order['order_status'] = $order->order_status;
-            forEach($orderDetails as $order_detail){
+            foreach($orderDetails as $order_detail){
                 $detail = $this->groupOrderDetailByProductId($order_detail);
                 $details[]= array_merge(...$detail);
             }
@@ -230,8 +232,8 @@ class OrderService
                 return $this->handlePayOSPayment($order, $order_total_amount);
             }
            
-           
-            return $this->responseSuccessWithData($order, 'Đặt hàng thành công!', 200);
+           $data=$order;
+            return $this->responseSuccessWithData($data, 'Đặt hàng thành công!', 200);
         } catch (Throwable $th) {
             DB::rollBack();
             return $this->responseError($th->getMessage(), 500);
@@ -362,10 +364,8 @@ class OrderService
                 return $this->responseError('Order not found!', 404);
             }
             $order_details = $this->orderRepository->getDetailOrder($id);
-            $data = [
-                'order' => $order,
-                'order_detail' => $order_details,
-            ];
+            $order['order_detail'] = $order_details;
+            $data=$order;
             return $this->responseSuccessWithData($data, 'Lấy thông tin đơn hàng thành công!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
@@ -391,14 +391,17 @@ class OrderService
             }
             $order->update([
                 'order_status' => "cancelled",
+                'order_updated_at' => now(),
             ]);
             $delivery=Delivery::where('order_id',$id)->first();
             $delivery->update([
                 'delivery_status' => "cancelled",
+                'delivery_updated_at' => now(),
             ]);
             $payment=Payment::where('order_id',$id)->first();
             $payment->update([
                 'payment_status' => "failed",
+                'payment_updated_at' => now(),
             ]);
             // $order_details = OrderDetail::where('order_id',$id)->get();
             $order_details = $this->orderRepository->getDetailOrder($id);
@@ -407,6 +410,7 @@ class OrderService
                 $product->update([
                     'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
                     'product_sold' => $product->product_sold - $order_detail->order_quantity,
+                    'product_updated_at' => now(),
                 ]);
                 $importDetail = ImportDetail::find($order_detail->import_detail_id);
                 $importDetail->update([
@@ -415,7 +419,8 @@ class OrderService
             }
             $order['order_detail'] = $order_details;
             DB::commit();
-            return $this->responseSuccessWithData($order, 'Hủy đơn hàng thành công!', 200);
+            $data = $order;
+            return $this->responseSuccessWithData($data, 'Hủy đơn hàng thành công!', 200);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -427,7 +432,8 @@ class OrderService
             $user = auth('user_api')->user();
             $user_id = $user->user_id;
             $order_status = $request->order_status;
-            $orders = $this->orderRepository->getAll((object)['user_id' => $user_id, 'order_status' => $order_status]);
+            $orders = $this->orderRepository->getAll((object)['user_id' => $user_id, 'order_status' => $order_status,
+                                                    'orderBy'=>'order_id','orderDirection'=>'DESC'])->distinct();
             if ($orders->get()->isEmpty()) {
                 return $this->responseSuccess('Không có đơn hàng!', 200);
             }
@@ -436,7 +442,7 @@ class OrderService
             } else {
                 $orders = $orders->get();
             }
-            forEach($orders as $order){
+            foreach($orders as $order){
                 $order['order_detail'] =$this->orderRepository->getDetailOrder($order->order_id);
             }
             $data=$orders;
@@ -582,7 +588,7 @@ class OrderService
             $content = 'Đơn hàng của bạn có mã đơn hàng là ' . $id . ' đã được cập nhật trạng thái thành: ' . $order->order_status;
             Log::info("Thêm jobs vào hàng đợi, Email:$user_email");
             Queue::push(new SendMailNotify($user_email, $content));
-            return $this->responseSuccessWithData($order, 'Cập nhật trạng thái đơn hàng thành công!', 200);
+            return $this->responseSuccess( 'Cập nhật trạng thái đơn hàng thành công!', 200);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -592,8 +598,8 @@ class OrderService
     public function getPaymentInfo($orderCode)
     {
         try {
-            $response = $this->payOSService->getPaymentLink($orderCode);
-            return $this->responseSuccess($response, 200);
+            $data = $this->payOSService->getPaymentLink($orderCode);
+            return $this->responseSuccess($data, 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -604,19 +610,35 @@ class OrderService
             $response = $this->payOSService->cancelPaymentLink($orderCode);
             $order = Order::where('order_id', $orderCode)->first();
             $order->update([
-                'payment_status' => 'failed',
                 'order_status' => 'cancelled',
+                'order_updated_at' => now(),
+            ]);
+            $delivery = Delivery::where('order_id', $orderCode)->first();
+            $delivery->update([
+                'delivery_status' => 'cancelled',
+                'delivery_updated_at' => now(),
+            ]);
+            $payment = Payment::where('order_id', $orderCode)->first();
+            $payment->update([
+                'payment_status' => 'failed',
+                'payment_updated_at' => now(),
             ]);
             $order_details = $this->orderRepository->getDetailOrder($orderCode);
             foreach ($order_details as $order_detail) {
-                $product = Product::find($order_detail->product_id);
+                // $product = Product::find($order_detail->product_id);
+                $product = Product::where('product_id', $order_detail->product_id)->first();
                 $product->update([
                     'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
                     'product_sold' => $product->product_sold - $order_detail->order_quantity,
                 ]);
+                $importDetail = ImportDetail::where('product_id', $order_detail->product_id)->where('import_detail_id', $order_detail->import_detail_id)->first();
+                $importDetail->update([
+                    'retaining_quantity' => $importDetail->retaining_quantity + $order_detail->order_quantity,
+                ]);
             }
             $order['order_detail'] = $order_details;
-            return $this->responseSuccessWithData($order, "Đã huỷ đơn hàng!", 200);
+            $data=$order;
+            return $this->responseSuccessWithData($data, "Đã huỷ đơn hàng!", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }

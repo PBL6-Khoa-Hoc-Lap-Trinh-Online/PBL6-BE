@@ -3,7 +3,7 @@
 namespace App\Repositories;
 use App\Models\DeliveryMethod;
 
-class DeliveryMethodRepository extends BaseRepository implements DeliveryInterface
+class DeliveryMethodRepository extends BaseRepository implements DeliveryMethodInterface
 {
     public function getModel()
     {
@@ -19,7 +19,7 @@ class DeliveryMethodRepository extends BaseRepository implements DeliveryInterfa
                         ->orWhere('delivery_method_description', 'LIKE', '%' . $filter->search . '%');
                 });
             })
-            ->when(isset($filter->delivery_method_is_delete), function ($query) use ($filter) {
+            ->when(isset($filter->delivery_is_active), function ($query) use ($filter) {
                 if ($filter->delivery_is_active !== 'all') {
                     $query->where('delivery_methods.delivery_is_active', $filter->delivery_is_active);
                 }

@@ -24,10 +24,11 @@ class ReceiverAddressService
         DB::beginTransaction();
         try{
             $id_user = auth('user_api')->user()->user_id;
-            $data =array_merge($request->all(),['user_id'=>$id_user]);
+            $data =array_merge($request->all(),['user_id'=>$id_user,'receiver_created_at'=>now()]);
             $receiverAddress= ReceiverAddress::create($data);
             DB::commit();
-            return $this->responseSuccessWithData($receiverAddress,'Thêm địa chỉ nhận hàng thành công!', 201);
+            $data=$this->receiverAddressRepository->getAll((object)['receiver_address_id'=>$receiverAddress->receiver_address_id])->first();
+            return $this->responseSuccessWithData($data,'Thêm địa chỉ nhận hàng thành công!', 201);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -39,9 +40,9 @@ class ReceiverAddressService
             $user_id = auth('user_api')->user()->user_id;
             $user= User::find($user_id);
             if($user){
-                $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
-                if($receiver_address){
-                    return $this->responseSuccessWithData($receiver_address,'Lấy địa chỉ nhận hàng thành công!', 200);
+                $data=$this->receiverAddressRepository->getAll((object)['receiver_address_id'=>$id,'user_id'=>$user_id])->first();
+                if($data){
+                    return $this->responseSuccessWithData($data,'Lấy địa chỉ nhận hàng thành công!', 200);
                 }
                 else{
                     return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
@@ -58,9 +59,12 @@ class ReceiverAddressService
             $user_id = auth('user_api')->user()->user_id;
             $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
             if($receiver_address){
-                $receiver_address->update($request->all());
+                $receiver_address->update($request->all(),[
+                    'receiver_updated_at'=>now()
+                ]);
                 DB::commit();
-                return $this->responseSuccessWithData($receiver_address,'Cập nhật địa chỉ nhận hàng thành công!', 200);
+                $data = $this->receiverAddressRepository->getAll((object)['receiver_address_id' => $id, 'user_id' => $user_id])->first();
+                return $this->responseSuccessWithData($data,'Cập nhật địa chỉ nhận hàng thành công!', 200);
             }
             else{
                 return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
@@ -73,11 +77,50 @@ class ReceiverAddressService
     }
     public function getAll(Request $request){
         try{
-            $user_id = auth('user_api')->user()->user_id;
-            $user= User::find($user_id);
-            if($user){
-                $receiver_address = ReceiverAddress::where('user_id',$user_id)->get();
-                return $this->responseSuccessWithData($receiver_address,'Lấy tất cả địa chỉ nhận hàng thành công!', 200);
+            $orderBy = $request->typesort ?? 'receiver_address_id';
+            switch ($orderBy) {
+                case 'receiver_name':
+                    $orderBy = 'receiver_name';
+                    break;
+                case 'receiver_phone':
+                    $orderBy = 'receiver_phone';
+                    break;
+                case 'new':
+                    $orderBy = "receiver_address_id";
+                    break;
+                default:
+                    $orderBy = 'receiver_address_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = [
+                'search' => $request->search ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+                'user_id' => auth('user_api')->user()->user_id
+            ];
+            $receiver_address = $this->receiverAddressRepository->getAll($filter);
+            if($request->paginate){
+                $receiver_address = $receiver_address->paginate($request->paginate);
+            }
+            else{
+                $receiver_address = $receiver_address->get();
+            }
+
+            if(!empty($receiver_address)){
+                $data=$receiver_address;
+                return $this->responseSuccessWithData($data,'Lấy tất cả địa chỉ nhận hàng thành công!', 200);
+            }
+            else{
+                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!',404);
             }
         }
         catch(Throwable $e){

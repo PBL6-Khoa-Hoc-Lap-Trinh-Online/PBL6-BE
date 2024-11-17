@@ -23,7 +23,7 @@ class StatisticController extends Controller
     }
     public function getProfit(Request $request)
     {
-        return $this->statisticService->getProfit($request);
+        return $this->statisticService->getProfitRevenue($request);
     }
     public function getOverview(Request $request){
         return $this->statisticService->getOverview($request);

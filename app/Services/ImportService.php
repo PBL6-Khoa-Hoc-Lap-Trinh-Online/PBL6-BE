@@ -24,6 +24,7 @@ class ImportService{
                 'supplier_id' => $request->supplier_id,
                 'import_date' => now(),
                 'import_total_amount' => 0.00,
+                'import_created_at' => now(),
             ];
             $import = Import::create($data);
             $importTotal = 0;
@@ -42,17 +43,16 @@ class ImportService{
                 $product = Product::find($importDetail['product_id']);
                 $product->update([
                     'product_quantity' => $product->product_quantity + $importDetail['import_quantity'],
+                    'product_updated_at' => now(),
                 ]);
                 $importTotal += $detail['product_total_price'];
                 $import_detail = ImportDetail::create($detail);
                 $importDetails[] = $import_detail;
             }
-            $import->update(['import_total_amount' => $importTotal]);
+            $import->update(['import_total_amount' => $importTotal,'import_updated_at' => now()]);
             DB::commit();
-            $data = [
-                'import' => $import,
-                'import_details' => $importDetails,
-            ];
+            $import['import_details'] = $importDetails;
+            $data=$import;
             return $this->responseSuccessWithData($data,'Nhập kho thành công!',200);
         }
         catch(Throwable $e){
@@ -108,7 +108,8 @@ class ImportService{
             else{
                 $imports = $imports->get();
             }
-            return $this->responseSuccessWithData($imports, "Lấy danh sách nhập kho thành công!", 200);
+            $data=$imports;
+            return $this->responseSuccessWithData($data, "Lấy danh sách nhập kho thành công!", 200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
@@ -124,10 +125,8 @@ class ImportService{
             // $importDetails =ImportDetail::where('import_id',$id)->get();
             // dd($importDetails);
             $importDetails=$this->importRepository->getImportDetails($id);
-            $data = [
-                'import' => $import,
-                'import_details' => $importDetails,
-            ];
+            $import['import_details'] = $importDetails;
+            $data = $import;
             return $this->responseSuccessWithData($data, "Lấy danh sách chi tiết nhập kho thành công!", 200);
         }
         catch(Throwable $e){

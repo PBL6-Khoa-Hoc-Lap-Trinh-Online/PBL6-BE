@@ -20,9 +20,11 @@ class SupplierService{
     public function add(RequestCreateSupplier $request){
         DB::beginTransaction();
         try{
+            $request['supplier_created_at'] = now();
             $supplier = Supplier::create($request->all());
             DB::commit();
-            return $this->responseSuccessWithData($supplier, "Thêm nhà cung cấp mới thành công!!",201);
+            $data=$supplier;
+            return $this->responseSuccessWithData($data, "Thêm nhà cung cấp mới thành công!!",201);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -36,9 +38,10 @@ class SupplierService{
             if(empty($supplier)){
                 return $this->responseError("Nhà cung cấp không tồn tại", 404);
             }
-            $supplier->update($request->all());
+            $supplier->update($request->all(),['supplier_updated_at' => now()]);
             DB::commit();
-            return $this->responseSuccessWithData($supplier, "Cập nhật nhà cung cấp thành công!!",200);
+            $data=$supplier;
+            return $this->responseSuccessWithData($data, "Cập nhật nhà cung cấp thành công!!",200);
         }
         catch(Throwable $e){
             DB::rollBack();
@@ -51,7 +54,8 @@ class SupplierService{
             if(empty($supplier)){
                 return $this->responseError("Nhà cung cấp không tồn tại", 404);
             }
-            return $this->responseSuccessWithData($supplier, "Lấy thông tin nhà cung cấp thành công!!",200);
+            $data=$supplier;
+            return $this->responseSuccessWithData($data, "Lấy thông tin nhà cung cấp thành công!!",200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
@@ -64,7 +68,7 @@ class SupplierService{
             if(empty($supplier)){
                 return $this->responseError("Nhà cung cấp không tồn tại", 404);
             }
-            $supplier->update(['supplier_is_delete' => $request->supplier_is_delete]);
+            $supplier->update(['supplier_is_delete' => $request->supplier_is_delete,'supplier_updated_at' => now()]);
             DB::commit();
             $request->supplier_is_delete == 1 ? $message = "Xoá nhà cung cấp thành công!!" : $message = "Khôi phục nhà cung cấp thành công!!";
             return $this->responseSuccess($message, 200);
@@ -118,16 +122,16 @@ class SupplierService{
             } else {
                 $suppliers = $suppliers->get();
             }
-
-            return $this->responseSuccessWithData($suppliers, "Lấy danh sách nhà cung cấp thành công!");
+            $data=$suppliers;
+            return $this->responseSuccessWithData($data, "Lấy danh sách nhà cung cấp thành công!");
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
     public function getNameSupplier(Request $request){
         try{
-            $suppliers = Supplier::where('supplier_is_delete',0)->select('supplier_id','supplier_name')->get();
-            return $this->responseSuccessWithData($suppliers, "Lấy danh sách nhà cung cấp thành công!");
+            $data = Supplier::where('supplier_is_delete',0)->select('supplier_id','supplier_name')->get();
+            return $this->responseSuccessWithData($data, "Lấy danh sách nhà cung cấp thành công!");
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());

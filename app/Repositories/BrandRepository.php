@@ -27,6 +27,9 @@ class BrandRepository extends BaseRepository implements BrandInterface
             })
             ->when(!empty($filter->orderBy), function ($query) use ($filter) {
                 $query->orderBy($filter->orderBy, $filter->orderDirection);
+            })
+            ->when(!empty($filter->brand_id), function ($query) use ($filter) {
+                $query->where('brand_id',$filter->brand_id);
             });
         return $data;
     }

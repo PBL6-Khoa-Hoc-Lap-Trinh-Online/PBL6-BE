@@ -74,7 +74,8 @@ class AdminService {
             $admin->token_type = 'bearer';
             $admin->expires_in = auth()->guard('admin_api')->factory()->getTTL() * 60;
             $admin->role = 'admin';
-            return $this->responseSuccessWithData($admin, 'Đăng nhập thành công!');
+            $data = $admin;
+            return $this->responseSuccessWithData($data, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
             dd($e->getMessage());
             return $this->responseError($e->getMessage());
@@ -144,8 +145,8 @@ class AdminService {
     }
     public function profile(){
         try {
-            $admin = auth('admin_api')->user();
-            return $this->responseSuccessWithData($admin,'Lấy thông tin quản trị viên thành công');
+            $data = auth('admin_api')->user();
+            return $this->responseSuccessWithData($data,'Lấy thông tin quản trị viên thành công');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -174,11 +175,11 @@ class AdminService {
                     Cloudinary::destroy($id_file);
                 }
                 
-                $data = array_merge($request->all(), ['admin_avatar' => $url]);
+                $data = array_merge($request->all(), ['admin_avatar' => $url,'admin_updated_at'=>now()]);
                 $admin->update($data);
             } else {
                 $request['admin_avatar'] = $admin->admin_avatar;
-                $admin->update($request->all());
+                $admin->update($request->all(),['admin_updated_at'=>now()]);
             }
 
             // Check update email
@@ -202,7 +203,8 @@ class AdminService {
             // }
 
             DB::commit();
-            return $this->responseSuccessWithData($admin, "Cập nhật thông tin tài khoản thành công!");
+            $data=$admin;
+            return $this->responseSuccessWithData($data, "Cập nhật thông tin tài khoản thành công!");
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage(), 400);
@@ -218,7 +220,7 @@ class AdminService {
                 return $this->responseError('Mật khẩu hiện tại không chính xác!');
             }
             $data = ['password' => Hash::make($request->new_password)];
-            $admin->update($data);
+            $admin->update($data, ['admin_updated_at' => now()]);
             DB::commit();
             return $this->responseSuccess('Thay đổi mật khẩu thành công!');
         }
@@ -281,8 +283,8 @@ class AdminService {
             // if ($users->isEmpty()) {
             //     return $this->responseError('Không có người dùng nào trong hệ thống!');
             // }
-
-            return $this->responseSuccessWithData($users, 'Danh sách người dùng được lấy thành công!');
+            $data=$users;
+            return $this->responseSuccessWithData($data, 'Danh sách người dùng được lấy thành công!');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -332,8 +334,8 @@ class AdminService {
             // if ($admins->isEmpty()) {
             //     return $this->responseError('Không có quản trị viên nào trong hệ thống!');
             // }
-    
-            return $this->responseSuccessWithData($admins, 'Danh sách quản trị viên được lấy thành công!');
+            $data = $admins;
+            return $this->responseSuccessWithData($data, 'Danh sách quản trị viên được lấy thành công!');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -356,7 +358,7 @@ class AdminService {
             }
 
             $new_role = ['admin_is_admin' => ! $admin_change->admin_is_admin];
-            $admin_change->update($new_role);
+            $admin_change->update($new_role, ['admin_updated_at' => now()]);
             DB::commit();
             $content = ($admin_change->admin_is_admin == 0) ? 'Admin' : 'SuperAdmin'; 
             return $this->responseSuccess("Đã cập nhật vai trò quản trị viên thành $content");
@@ -377,7 +379,7 @@ class AdminService {
 
             $status_block = ! $user->user_is_block;
             $new_block = ['user_is_block' => $status_block];   
-            $user->update($new_block);
+            $user->update($new_block, ['user_updated_at' => now()]);
             DB::commit(); 
             
             $status = ($status_block==0) ? 'được mở khóa' : 'bị khóa';
@@ -401,7 +403,7 @@ class AdminService {
 
             $status_delete = ! $user->user_is_delete;
             $new_delete = ['user_is_delete' => $status_delete];   
-            $user->update($new_delete);
+            $user->update($new_delete, ['user_updated_at' => now()]);
             DB::commit(); 
             
             $status = ($status_delete==0) ? 'được khôi phục' : 'xóa';
@@ -425,6 +427,7 @@ class AdminService {
                 'email' => $request->email,
                 // 'password' => Hash::make(Str::random(8)),
                 'password' => Str::random(8),
+                'admin_created_at' => now(),
 
             ];
             $admin = Admin::create($data);
@@ -435,6 +438,7 @@ class AdminService {
             Queue::push(new SendVerifyEmail($admin->email, $url));
             $data = [
                 'token_verify_email' => $token,
+                'admin_updated_at' => now(),
             ];
             $admin->update($data);
             DB::commit();
@@ -460,6 +464,7 @@ class AdminService {
                     'email_verified_at' => now(),
                     'token_verify_email' => null,
                     'password' => Hash::make($admin->password),
+                    'admin_updated_at' => now(),
                 ];
                 $admin->update($data);
                 DB::commit();
@@ -496,10 +501,12 @@ class AdminService {
             Queue::push(new SendVerifyEmail($admin->email, $url));
             $data = [
                 'token_verify_email' => $token,
+                'admin_updated_at' => now(),
             ];
             $admin->update($data);
             DB::commit();
-            return $this->responseSuccessWithData($admin, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
+            $data=$admin;
+            return $this->responseSuccessWithData($data, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
 
         } catch (Throwable $e) {
             DB::rollback();

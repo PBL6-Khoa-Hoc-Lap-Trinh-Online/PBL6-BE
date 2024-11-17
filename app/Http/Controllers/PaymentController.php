@@ -14,6 +14,7 @@ class PaymentController extends Controller
     {
         $this->paymentService = $paymentService;
     }
+    //payment-method
     public function add(RequestAddPaymentMethod $request)
     {
         return $this->paymentService->add($request);
@@ -38,6 +39,18 @@ class PaymentController extends Controller
     {
         return $this->paymentService->getAllPaymentMethodByUser($request);
 
+    }
+    //payments
+    public function managePayment(Request $request){
+        return $this->paymentService->getAll($request);
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        return $this->paymentService->updateStatus($request, $id);
+    }
+    public function getPaymentDetail(Request $request, $id)
+    {
+        return $this->paymentService->getPayment($request, $id);
     }
   
     public function handlePayOSWebhook(Request $request)

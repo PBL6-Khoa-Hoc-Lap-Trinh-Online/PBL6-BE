@@ -31,7 +31,11 @@ class ProductService{
             if(empty($product)){
                 return $this->responseError("Sản phẩm không tồn tại!",404);
             }
-            return $this->responseSuccessWithData($product, "Lấy sản phẩm thành công!");
+            $category_id = $product->category_id;
+            $product['same_category']=$this->productRepository->getAll((object)['category_id' => $category_id,'product_is_delete'=>'0'])->where('product_id','!=',$id)->get();
+            
+            $data=$product;
+            return $this->responseSuccessWithData($data, "Lấy sản phẩm thành công!");
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());
@@ -41,7 +45,8 @@ class ProductService{
         try {
             $products = $this->getProducts($request);
             $products=$products->where('product_is_delete','0')->values();
-            return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
+            $data=$products;
+            return $this->responseSuccessWithData($data, 'Danh sách sản phẩm!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -147,6 +152,7 @@ class ProductService{
                 $data['product_images'] = $imageUrls;
                 // $data['product_images'] = json_encode($imageUrls, JSON_UNESCAPED_SLASHES);
             }
+            $data['product_created_at'] = now();
             $product = Product::create($data);
             DB::commit();
             $data = $product;
@@ -203,11 +209,11 @@ class ProductService{
                         $imageUrls[] = $url;
                     }
                 }
-                $data = array_merge($request->all(), ['product_images' => $imageUrls]);
+                $data = array_merge($request->all(), ['product_images' => $imageUrls, 'product_updated_at' => now()]);  
                 $product->update($data);
             } else {
                 $request['product_images'] = $product->product_images;
-                $product->update($request->all());
+                $product->update($request->all(), ['product_updated_at' => now()]);
             }
             DB::commit();
             $data=$product;
@@ -229,7 +235,7 @@ class ProductService{
             if($productExist){
                 return $this->responseError("Sản phẩm đang nằm trong đơn hàng, không thể xoá!");
             }
-            $product->update(['product_is_delete' => $request->product_is_delete]);
+            $product->update(['product_is_delete' => $request->product_is_delete, 'product_updated_at' => now()]);
             DB::commit();
             $request->product_is_delete == 1 ? $message = "Xoá sản phẩm thành công!" : $message = "Khôi phục sản phẩm thành công!";
             return $this->responseSuccess($message, 200);
@@ -248,7 +254,7 @@ class ProductService{
                 return $this->responseError("Không tìm thấy sản phẩm!");
             }
             foreach($products as $index => $product){
-                $product->update(['product_is_delete' => $request->product_is_delete]);
+                $product->update(['product_is_delete' => $request->product_is_delete, 'product_updated_at' => now()]);
             }
             DB::commit();
             $request->product_is_delete == 1 ? $message = "Xoá các sản phẩm thành công!" : $message = "Khôi phục các sản phẩm thành công!";
@@ -261,8 +267,15 @@ class ProductService{
     }
     public function getNameProduct(Request $request){
         try{
-            $products = Product::where('product_is_delete','0')->select('product_id','product_name')->get();
-            return $this->responseSuccessWithData($products, 'Danh sách sản phẩm!', 200);
+            $products = Product::where('product_is_delete','0')->select('product_id','product_name');
+            if($request->paginate){
+                $products = $products->paginate($request->paginate);
+            }
+            else{
+                $products = $products->get();
+            }
+            $data=$products;
+            return $this->responseSuccessWithData($data, 'Danh sách sản phẩm!', 200);
         }
         catch(Throwable $e){
             return $this->responseError($e->getMessage());

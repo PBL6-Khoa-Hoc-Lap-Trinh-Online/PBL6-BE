@@ -9,6 +9,8 @@ class Delivery extends Model
 {
     use HasFactory;
     protected $primaryKey = 'delivery_id';
+    const CREATED_AT = 'delivery_created_at';
+    const UPDATED_AT = 'delivery_updated_at';
     protected $fillable = [
         'delivery_id',
         'order_id',
@@ -18,6 +20,8 @@ class Delivery extends Model
         'delivery_tracking_number',
         'delivery_description',
         'delivery_shipped_at',
+        'delivery_created_at',
+        'delivery_updated_at',
     ];
     public $timestamps = false;
     public function order(){

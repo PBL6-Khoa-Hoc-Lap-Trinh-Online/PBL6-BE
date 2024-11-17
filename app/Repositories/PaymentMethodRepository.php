@@ -6,7 +6,7 @@ use App\Models\PaymentMethod;
 
 
 
-class PaymentMethodRepository extends BaseRepository implements PaymentInterface
+class PaymentMethodRepository extends BaseRepository implements PaymentMethodInterface
 {
     public function getModel()
     {
@@ -22,8 +22,8 @@ class PaymentMethodRepository extends BaseRepository implements PaymentInterface
                         ->orWhere('payment_method_description', 'LIKE', '%' . $filter->search . '%');
                 });
             })
-            ->when(isset($filter->Payment_method_is_delete), function ($query) use ($filter) {
-                if ($filter->Payment_is_active !== 'all') {
+            ->when(isset($filter->payment_is_active), function ($query) use ($filter) {
+                if ($filter->payment_is_active !== 'all') {
                     $query->where('payment_methods.payment_is_active', $filter->payment_is_active);
                 }
             })

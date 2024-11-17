@@ -37,9 +37,17 @@ class DeliveryController extends Controller
     {
         return $this->deliveryService->getAllDeliveryMethodByUser($request);
     }
-    // public function getAll(Request $request)
-    // {
-    //     return $this->deliveryService->getAll($request);
-    // }
+    public function manageDelivery(Request $request)
+    {
+        return $this->deliveryService->getAll($request);
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        return $this->deliveryService->updateStatus($request, $id);
+    }
+    public function getDeliveryDetail(Request $request, $id)
+    {
+        return $this->deliveryService->getDelivery($request, $id);
+    }
 
 }

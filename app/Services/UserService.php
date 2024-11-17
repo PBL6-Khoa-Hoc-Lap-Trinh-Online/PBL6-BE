@@ -49,6 +49,7 @@ class UserService
                 'user_fullname' => $request->fullname,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'user_created_at' => now(),
             ];
             $user = User::create($data);
             //verify email
@@ -58,6 +59,7 @@ class UserService
             Queue::push(new SendVerifyEmail($user->email, $url));
             $data = [
                 'token_verify_email' => $token,
+                'user_updated_at' => now(),
             ];
             $user->update($data);
             DB::commit();
@@ -77,6 +79,7 @@ class UserService
                 $data = [
                     'email_verified_at' => now(),
                     'token_verify_email' => null,
+                    'user_updated_at' => now(),
                 ];
                 $user->update($data);
                 DB::commit();
@@ -111,6 +114,7 @@ class UserService
             Queue::push(new SendVerifyEmail($user->email, $url));
             $data = [
                 'token_verify_email' => $token,
+                'user_updated_at' => now(),
             ];
             $user->update($data);
             DB::commit();
@@ -259,6 +263,7 @@ class UserService
             }
             else{
                 $request['user_avatar'] = $user->user_avatar;
+                $request['user_updated_at'] = now();
                 $user->update($request->all());
             }
             //check update email
@@ -272,6 +277,7 @@ class UserService
                 $data = [
                     'token_verify_email' => $token,
                     'email_verified_at' => null,
+                    'user_updated_at' => now(),
                 ];
                 $user->update($data);
                 auth('user_api')->logout();
@@ -295,7 +301,7 @@ class UserService
             if(!(Hash::check($request->current_password, $user->password))){
                 return $this->responseError('Mật khẩu hiện tại không chính xác!');
             }
-            $data = ['password' => Hash::make($request->new_password)];
+            $data = ['password' => Hash::make($request->new_password), 'user_updated_at' => now()];
             $user->update($data);
             DB::commit();
             return $this->responseSuccess('Thay đổi mật khẩu thành công!');

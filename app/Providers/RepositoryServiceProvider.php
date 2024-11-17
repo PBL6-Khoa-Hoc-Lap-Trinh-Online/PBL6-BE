@@ -30,9 +30,13 @@ use App\Repositories\CartRepository;
 use App\Repositories\PaymentInterface;
 use App\Repositories\PaymentRepository;
 use App\Repositories\DeliveryInterface;
+use App\Repositories\DeliveryMethodInterface;
+use App\Repositories\DeliveryMethodRepository;
 use App\Repositories\DeliveryRepository;
 use App\Repositories\DiseaseInterface;
 use App\Repositories\DiseaseRepository;
+use App\Repositories\PaymentMethodInterface;
+use App\Repositories\PaymentMethodRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -58,6 +62,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(DiseaseInterface::class, DiseaseRepository::class);
         $this->app->bind(PaymentInterface::class, PaymentRepository::class);
         $this->app->bind(DeliveryInterface::class, DeliveryRepository::class);
+        $this->app->bind(PaymentMethodInterface::class, PaymentMethodRepository::class);
+        $this->app->bind(DeliveryMethodInterface::class, DeliveryMethodRepository::class);
 
     }
 
