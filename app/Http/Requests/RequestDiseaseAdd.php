@@ -23,7 +23,8 @@ class RequestDiseaseAdd extends FormRequest
     {
         return [
             'disease_name' => 'required|string|max:255',
-            'disease_thumbnail' => 'nullable|image|max:2048',
+            // 'disease_thumbnail' => 'nullable|image|max:2048',
+            'disease_thumbnail' => 'nullable|file|image',
             'general_overview' => 'required|string',
             'symptoms' => 'required|string',
             'cause' => 'required|string',

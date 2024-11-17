@@ -54,7 +54,11 @@ class CartService
                     ];
                 }
             }
-            return $this->responseSuccessWithData($cartProducts, "Lấy chi tiết giỏ hàng thành công", 200);
+            usort($cartProducts, function($a, $b) {
+                return $b['cart_id'] - $a['cart_id']; 
+            });
+            $data=$cartProducts;
+            return $this->responseSuccessWithData($data, "Lấy chi tiết giỏ hàng thành công", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -105,7 +109,8 @@ class CartService
                 ]);
             }
             DB::commit();
-            return $this->responseSuccessWithData($cart,'Thêm vào giỏ hàng thành công',201);
+            $data=$cart;
+            return $this->responseSuccessWithData($data,'Thêm vào giỏ hàng thành công',201);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -137,7 +142,8 @@ class CartService
                 $cart->save();
             }
             DB::commit();
-            return $this->responseSuccessWithData($cart,'Cập nhật sản phẩm thành công',201);
+            $data=$cart;
+            return $this->responseSuccessWithData($data,'Cập nhật sản phẩm thành công',201);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());

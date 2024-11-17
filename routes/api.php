@@ -250,6 +250,7 @@ Route::prefix('statistics')->controller(StatisticController::class)->group(funct
         Route::get('revenue', 'getRevenue');
         Route::get('order', 'getOrders');
         Route::get('profit', 'getProfit');
+        Route::get('top-product', 'getTopProduct');
     });
 });
 
@@ -266,11 +267,13 @@ Route::get('/wards/{districtId}', [VietnamZoneController::class, 'getWards']);
 Route::prefix('disease')->controller(DiseaseController::class)->group(function (){
     Route::get('get', 'getDiseaseUser');
     Route::get('getCategory/{id}','getDiseaseCategory');
+    Route::get('search', 'searchDisease');
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add','add');
         Route::get('getAll','getAll');
         Route::post('update/{id}','update');
         Route::post('addCategory','addDiseaseCategory');
+        Route::post('deleteCategory','deleteDiseaseCategory');
     });
     Route::get('{id}','get');
 

@@ -77,7 +77,7 @@ class AdminService {
             $data = $admin;
             return $this->responseSuccessWithData($data, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
             return $this->responseError($e->getMessage());
         }
     }
@@ -442,7 +442,8 @@ class AdminService {
             ];
             $admin->update($data);
             DB::commit();
-            return $this->responseSuccessWithData($admin, 'Thêm tài khoản admin thành công!', 201);
+            $data=$admin;
+            return $this->responseSuccessWithData($data, 'Thêm tài khoản admin thành công!', 201);
             
         } catch (Throwable $e){
             DB::rollBack();

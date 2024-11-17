@@ -63,7 +63,8 @@ class UserService
             ];
             $user->update($data);
             DB::commit();
-            return $this->responseSuccessWithData($user, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
+            $data=$user;
+            return $this->responseSuccessWithData($data, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
         } catch (Throwable $e) {
             DB::rollback();
             return $this->responseError($e->getMessage());
@@ -118,7 +119,8 @@ class UserService
             ];
             $user->update($data);
             DB::commit();
-            return $this->responseSuccessWithData($user, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
+            $data = $user;
+            return $this->responseSuccessWithData($data, 'Đã gửi lại link xác thực! Vui lòng kiểm tra email để xác thực tài khoản!', 201);
 
         } catch (Throwable $e) {
             DB::rollback();
@@ -156,12 +158,9 @@ class UserService
             $user->access_token = auth()->guard('user_api')->attempt($credentials);
             $user->token_type = 'bearer';
             $user->expires_in = auth()->guard('user_api')->factory()->getTTL() * 60;
-
             $user->role='user';
-
-            
-
-            return $this->responseSuccessWithData($user, 'Đăng nhập thành công!');
+            $data=$user;
+            return $this->responseSuccessWithData($data, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
             dd($e->getMessage());
             return $this->responseError($e->getMessage());
@@ -233,8 +232,8 @@ class UserService
     public function profile(Request $request)
     {
         try {
-            $user = auth('user_api')->user();
-            return $this->responseSuccessWithData($user, 'Lấy thông tin người dùng thành công!');
+            $data = auth('user_api')->user();
+            return $this->responseSuccessWithData($data, 'Lấy thông tin người dùng thành công!');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -286,7 +285,8 @@ class UserService
             }
 
             DB::commit();
-            return $this->responseSuccessWithData($user, "Cập nhật thông tin tài khoản thành công!");
+            $data=$user;
+            return $this->responseSuccessWithData($data, "Cập nhật thông tin tài khoản thành công!");
         }
         catch(Throwable $e){
             DB::rollback();

@@ -18,7 +18,7 @@ class VietnamZoneService
     public function getProvinces()
     {
         try {
-            $HTTP_RAW_POST_DATA = Province::all();
+            $data = Province::all();
             return $this->responseSuccessWithData($data,'Lấy dữ liệu tỉnh/thành phố thành công',200);
         } catch (Throwable $e) {
             DB::rollback();

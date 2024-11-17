@@ -77,7 +77,8 @@ class StatisticService
                 }
             }
             ksort($result);
-            return $this->responseSuccessWithData($result, 'Lấy doanh thu thành công!', 200);
+            $data=$result;
+            return $this->responseSuccessWithData($data, 'Lấy doanh thu thành công!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -195,40 +196,19 @@ class StatisticService
         ];
         return $data;
     }
-    public function getProfit(Request $request)
-    {
-        try {
-            if ($request->start_date) {
-                $startDate = Carbon::parse($request->start_date);
-            } else {
-                $startDate = Import::orderBy('import_created_at', 'asc')->value('import_created_at');
-            }
+    public function getTopProduct(Request $reqeust){
+        $year = $reqeust->year ?? Carbon::now();
+        $topProducts = Order::where('order_status', 'delivered')
+        ->whereYear('order_created_at', $year)
+        ->join('order_details', 'orders.order_id', '=', 'order_details.order_id')
+        ->join('products', 'order_details.product_id', '=', 'products.product_id')
+        ->selectRaw('order_details.product_id, products.product_name, products.product_images, SUM(order_details.order_quantity) as total_quantity')
+        ->groupBy('order_details.product_id', 'products.product_name', 'products.product_images')
+        ->orderBy('total_quantity', 'desc')
+        ->limit(5)
+        ->get();
 
-            if ($request->end_date) {
-                $endDate = Carbon::parse($request->end_date);
-            } else {
-                $endDate = Carbon::now();
-            }
-        
-            $orderDetail = Order::where('order_status', 'delivered')
-                ->whereDate('order_created_at', '>=', $startDate)
-                ->whereDate('order_created_at', '<=', $endDate)
-                ->join('order_details', 'orders.order_id', '=', 'order_details.order_id')
-                ->selectRaw('product_id,order_total_price,order_quantity,import_detail_id,order_created_at  as date')
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-            $profitByProduct = [];
-            forEach($orderDetail as $order_detail){
-                $importDetail = ImportDetail::where('product_id',$order_detail->product_id)->where('import_detail_id', $order_detail->import_detail_id)->first();
-                $import_price = $importDetail->import_price;
-                $profit = $order_detail->order_total_price - $import_price * $order_detail->order_quantity;
-
-            }
-
-            return $this->responseSuccessWithData($profitByProduct, 'Lấy lợi nhuận thành công!', 200);
-        } catch (Throwable $e) {
-            return $this->responseError($e->getMessage());
-        }
+        $data = $topProducts;
+        return $this->responseSuccessWithData($data, 'Lấy sản phẩm bán chạy nhất thành công!', 200);
     }
 }

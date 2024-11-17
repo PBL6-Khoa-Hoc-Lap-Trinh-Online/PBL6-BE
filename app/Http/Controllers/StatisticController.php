@@ -28,4 +28,7 @@ class StatisticController extends Controller
     public function getOverview(Request $request){
         return $this->statisticService->getOverview($request);
     }
+    public function getTopProduct(Request $request){
+        return $this->statisticService->getTopProduct($request);
+    }
 }
