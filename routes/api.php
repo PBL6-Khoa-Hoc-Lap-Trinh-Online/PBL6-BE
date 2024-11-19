@@ -16,6 +16,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
 use App\Http\Controllers\VietnamZoneController;
 use App\Http\Controllers\DiseaseController;
+use App\Http\Controllers\ImageController;
 
 use Illuminate\Http\Request;
 
@@ -277,4 +278,12 @@ Route::prefix('disease')->controller(DiseaseController::class)->group(function (
     });
     Route::get('{id}','get');
 
+});
+
+
+//Image 
+Route::prefix('image')->controller(ImageController::class)->group(function (){
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('upload','uploadImage');
+    });
 });
