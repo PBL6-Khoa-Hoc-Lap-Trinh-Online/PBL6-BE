@@ -178,9 +178,19 @@ class OrderService
             $user = auth('user_api')->user();
             $ids_cart = $request->ids_cart;
             $carts = Cart::whereIn('cart_id', $ids_cart)->get();
-
+            //Check số lượng sản phẩm còn không?
+         
             if ($carts->isEmpty()) {
                 return $this->responseError('Giỏ hàng rỗng!', 404);
+            }
+            foreach ($carts as $cart) {
+                $product = Product::where('product_id', $cart->product_id)->where('product_is_delete', '0')->first();
+                if (empty($product)) {
+                    return $this->responseError('Sản phẩm không tồn tại!', 404);
+                }
+                if ($product->product_quantity < $cart->cart_quantity) {
+                    return $this->responseError('Số lượng sản phẩm '.$product->product_name.' trong kho không đủ!', 400);
+                }
             }
             $delivery_fee = DeliveryMethod::where('delivery_method_id', $request->delivery_id)->first()->delivery_fee;
             $data =[
@@ -193,13 +203,6 @@ class OrderService
 
             foreach ($carts as $cart) {
                 $product = Product::where('product_id', $cart->product_id)->where('product_is_delete','0')->first();
-                if (empty($product)) {
-                    return $this->responseError('Sản phẩm không tồn tại!', 404);
-                }
-                if ($product->product_quantity < $cart->cart_quantity) {
-                    return $this->responseError('Số lượng sản phẩm trong kho không đủ!', 400);
-                }
-
                 $quantity = $cart->cart_quantity;
                 $orderDetails[] = $this->createOrderDetail($order, $product,  $quantity);
                 $this->updateProductQuantityAndSold($product,  $quantity);
@@ -224,8 +227,10 @@ class OrderService
             }
             
             $order['order_detail'] = $details;
-            //$this->sendOrderConfirmationEmail($user, $order, $details);
-            DB::commit();
+            $data = $order;
+            // return $this->responseSuccessWithData($orderDetails[0], 'Đặt hàng thành công!', 200);
+            $this->sendOrderConfirmationEmail($user, $order, $orderDetails[0]);
+             DB::commit();
             
            
             if ($request->payment_id == 2) {
@@ -314,7 +319,7 @@ class OrderService
         }
 
         $content .= '</table>';
-
+        // dd($content);
         // Đẩy email vào queue để gửi
         Queue::push(new SendMailNotify($user->email, $content));
     }
