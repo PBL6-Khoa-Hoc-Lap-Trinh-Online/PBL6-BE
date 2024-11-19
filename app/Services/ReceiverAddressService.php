@@ -3,6 +3,7 @@ namespace App\Services;
 
 use App\Http\Requests\RequestAddReceiverAddress;
 use App\Http\Requests\RequestUserUpdateAddress;
+use App\Models\Order;
 use App\Models\ReceiverAddress;
 use App\Models\User;
 use App\Repositories\ReceiverAddressInterface;
@@ -133,6 +134,10 @@ class ReceiverAddressService
             $user_id = auth('user_api')->user()->user_id;
             $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
             if($receiver_address){
+                $order=Order::where('receiver_address_id',$id)->first();
+                if($order){
+                    return $this->responseError('Địa chỉ nhận hàng đang được sử dụng không được xoá!');
+                }
                 $receiver_address->delete();
                 DB::commit();
                 return $this->responseSuccess('Xóa địa chỉ nhận hàng thành công!', 200);

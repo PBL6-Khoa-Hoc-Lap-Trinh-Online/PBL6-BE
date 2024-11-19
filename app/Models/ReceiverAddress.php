@@ -26,8 +26,8 @@ class ReceiverAddress extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
-    public function order(){
-        return $this->hasOne(Order::class);
+    public function orders(){
+        return $this->hasMany(Order::class);
     }
     public function province(){
         return $this->belongsTo(Province::class);
