@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\UserEnum;
 use App\Http\Requests\RequestUserBuyProduct;
 use App\Http\Requests\RequestUserCheckoutCart;
+use App\Jobs\CancelOrderJob;
 use App\Jobs\SendMailNotify;
 use App\Models\Cart;
 use App\Models\Delivery;
@@ -161,7 +162,9 @@ class OrderService
             $this->sendOrderConfirmationEmail($user, $order, $orderDetail);
 
             if ($payment_method_id == 2) {
-                return $this->handlePayOSPayment($order, $order_total_amount);
+                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
+                $order_id=$order->order_id;
+                return $this->handlePayOSPayment($order_id, $order_total_amount);
             }
             $order['order_detail'] = $this->groupOrderDetailByProductId($orderDetail);
             $data = $order;
@@ -170,6 +173,20 @@ class OrderService
             DB::rollBack();
             return $this->responseError($th->getMessage(), 400);
         }
+    }
+    private function handlePayOSPayment($orderId, $totalAmount)
+    {
+        $YOUR_DOMAIN = UserEnum::URL_CLIENT;
+        $paymentData = [
+            "orderCode" => $orderId,
+            "amount" => $totalAmount,
+            "description" => "Thanh toán đơn hàng #" . $orderId,
+            "returnUrl" => $YOUR_DOMAIN . "/success",
+            "cancelUrl" => $YOUR_DOMAIN . "/cancel",
+        ];
+        $response = $this->payOSService->createPaymentLink($paymentData);
+        $data = $response['checkoutUrl'];
+        return $this->responseSuccessWithData($data, 'Vui lòng thanh toán hoá đơn!', 200);
     }
     public function checkoutCart(RequestUserCheckoutCart $request)
     {
@@ -234,7 +251,9 @@ class OrderService
             
            
             if ($request->payment_id == 2) {
-                return $this->handlePayOSPayment($order, $order_total_amount);
+                $orderId=$order->order_id;
+                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
+                return $this->handlePayOSPayment($orderId, $order_total_amount);
             }
            
            $data=$order;
@@ -323,7 +342,7 @@ class OrderService
         // Đẩy email vào queue để gửi
         Queue::push(new SendMailNotify($user->email, $content));
     }
-    public function createPaymentRecord($order,$payment_method_id)
+    public function createPaymentRecord($order, $payment_method_id)
     {
         $data = [
             'order_id' => $order->order_id,
@@ -334,7 +353,7 @@ class OrderService
         ];
         return Payment::create($data);
     }
-    public function createDeliveriesRecord($order, $delivery_method_id, $delivery_fee = 0)
+        public function createDeliveriesRecord($order, $delivery_method_id, $delivery_fee = 0)
     {
         $data = [
             'order_id' => $order->order_id,
@@ -347,19 +366,7 @@ class OrderService
         return Delivery::create($data);
     }
 
-    private function handlePayOSPayment($order, $total_amount)
-    {
-        $YOUR_DOMAIN = UserEnum::URL_CLIENT;
-        $paymentData = [
-            "orderCode" => $order->order_id,
-            "amount" => $total_amount,
-            "description" => "Thanh toán đơn hàng #" . $order->order_id,
-            "returnUrl" => $YOUR_DOMAIN . "/success",
-            "cancelUrl" => $YOUR_DOMAIN . "/cancel"
-        ];
-        $response = $this->payOSService->createPaymentLink($paymentData);
-        return $this->responseSuccessWithData($response['checkoutUrl'], 'Vui lòng thanh toán hoá đơn!', 200);
-    }
+ 
     public function getOrderDetail(Request $request, $id)
     {
         try {
@@ -408,20 +415,8 @@ class OrderService
                 'payment_status' => "failed",
                 'payment_updated_at' => now(),
             ]);
-            // $order_details = OrderDetail::where('order_id',$id)->get();
             $order_details = $this->orderRepository->getDetailOrder($id);
-            foreach ($order_details as $order_detail) {
-                $product = Product::find($order_detail->product_id);
-                $product->update([
-                    'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
-                    'product_sold' => $product->product_sold - $order_detail->order_quantity,
-                    'product_updated_at' => now(),
-                ]);
-                $importDetail = ImportDetail::find($order_detail->import_detail_id);
-                $importDetail->update([
-                    'retaining_quantity' => $importDetail->retaining_quantity + $order_detail->order_quantity,
-                ]);
-            }
+            $this->updateQuantityImportDetailAndProduct($id);
             $order['order_detail'] = $order_details;
             DB::commit();
             $data = $order;
@@ -470,6 +465,12 @@ class OrderService
                 case 'order_status':
                     $orderBy = 'order_status';
                     break;
+                case 'payment_status':
+                    $orderBy = 'payment_status';
+                    break;
+                case 'delivery_status':
+                    $orderBy = 'delivery_status';
+                    break;
                 case 'order_id':
                     $orderBy = 'order_id';
                     break;
@@ -482,13 +483,20 @@ class OrderService
             $filter = (object)[
                 'search' => $request->search ?? '',
                 'user_id' => $request->user_id ?? '',
+                'payment_status' => $request->payment_status ?? '',
+                'delivery_status' => $request->delivery_status ?? '',
+                'payment_method_id' => $request->payment_method_id ?? '',
+                'delivery_method_id' => $request->delivery_method_id ?? '',
+                'order_id' => $request->order_id ?? '',
+                'payment_method_name' => $request->payment_method_name ?? '',
+                'delivery_method_name' => $request->delivery_method_name ?? '',
                 'order_status' => $request->order_status ?? 'pending',
                 'to_date' => $request->to_date ?? '',
                 'from_date' => $request->from_date ?? '',
                 'orderBy' => $orderBy,
                 'orderDirection' => $orderDirection,
             ];
-            $orders = $this->orderRepository->getAll($filter);
+            $orders = $this->orderRepository->getAll($filter)->distinct();
             if (!empty($request->paginate)) {
                 $orders = $orders->paginate($request->paginate);
             } else {
@@ -498,8 +506,8 @@ class OrderService
                 return $this->responseSuccess('Không có đơn hàng!', 200);
             }
             foreach ($orders as $order) {
-                $order_detail = $this->orderRepository->getDetailOrder($order->order_id);
-                $order['order_detail'] = $this->groupOrderDetailByProductId($order_detail);
+                $order['order_detail']= $this->orderRepository->getDetailOrder($order->order_id)->values();
+                 
             }
             $data = $orders;
             return $this->responseSuccessWithData($data, 'Lấy danh sách đơn hàng thành công!', 200);
@@ -513,7 +521,7 @@ class OrderService
             // $order = Order::find($id);
             $order = $this->orderRepository->getAll((object)['order_id' => $id])->first();
             if (empty($order)) {
-                return $this->responseError('Order not found!', 404);
+                return $this->responseError('Đơn hàng không tồn tại!', 404);
             }
             $order['order_details'] = $this->orderRepository->getDetailOrder($id);
             $data = $order;
@@ -527,73 +535,119 @@ class OrderService
         DB::beginTransaction();
         try {
             $order = Order::find($id);
-            // $order = $this->orderRepository->getAll((object)['order_id' => $id])->first();
             if (empty($order)) {
-                return $this->responseError('Order not found!', 404);
+                return $this->responseError('Không tìm thấy đơn hàng!', 404);
             }
+
+            // Trường hợp đơn hàng đã bị hủy hoặc đã giao
             if ($order->order_status == "cancelled") {
                 return $this->responseError('Đơn hàng đã bị hủy!', 400);
             } else if ($order->order_status == "delivered") {
                 return $this->responseError('Đơn hàng đã được giao!', 400);
-            } else if ($order->order_status == "pending") {
-                 $payment = Payment::where('order_id', $id)->first();
-                if($payment->payment_method_id == 2){
-                    if($payment->payment_status =='pending'){
-                        return $this->responseError('Đơn hàng chưa thanh toán!', 400);
+            }
+
+            // Kiểm tra nếu muốn hủy đơn hàng
+            if ($request->input('status') == 'cancelled') {
+                if ($order->order_status == "pending" || $order->order_status == "confirmed") {
+                    $order->update([
+                        'order_status' => 'cancelled',
+                        'order_updated_at' => now(),
+                    ]);
+                    $delivery = Delivery::where('order_id', $id)->first();
+                    if ($delivery) {
+                        $delivery->update([
+                            'delivery_status' => 'cancelled',
+                            'delivery_updated_at' => now(),
+                        ]);
                     }
-                    elseif($payment->payment_status =='failed'){
+                    $payment = Payment::where('order_id', $id)->first();
+                    if ($payment) {
+                        $payment->update([
+                            'payment_status' => 'failed',
+                            'payment_updated_at' => now(),
+                        ]);
+                    }
+                    $this->updateQuantityImportDetailAndProduct($id);
+                } else {
+                    return $this->responseError('Không thể hủy đơn hàng ở trạng thái này!', 400);
+                }
+            }
+
+            // Các trạng thái khác
+            else if ($order->order_status == "pending") {
+                // Xử lý thanh toán
+                $payment = Payment::where('order_id', $id)->first();
+                if ($payment && $payment->payment_method_id == 2) {
+                    if ($payment->payment_status == 'pending') {
+                        return $this->responseError('Đơn hàng chưa thanh toán!', 400);
+                    } elseif ($payment->payment_status == 'failed') {
                         $order->update([
                             'order_status' => 'cancelled',
                             'order_updated_at' => now(),
                         ]);
                         $delivery = Delivery::where('order_id', $id)->first();
-                        $delivery->update([
-                            'delivery_status' => 'cancelled',
-                            'delivery_updated_at' => now(),
-                        ]);
+                        if ($delivery) {
+                            $delivery->update([
+                                'delivery_status' => 'cancelled',
+                                'delivery_updated_at' => now(),
+                            ]);
+                        }
                         return $this->responseError('Đơn hàng thanh toán thất bại!', 400);
-                    }
-                    else{
+                    } else {
                         $order->update([
                             'order_status' => 'confirmed',
                             'order_updated_at' => now(),
                         ]);
                     }
-                }
-                else{
+                } else {
                     $order->update([
                         'order_status' => 'confirmed',
                         'order_updated_at' => now(),
                     ]);
                 }
-               
             } else if ($order->order_status == "confirmed") {
                 $order->update([
                     'order_status' => 'shipped',
                     'order_updated_at' => now(),
                 ]);
+                $delivery = Delivery::where('order_id', $id)->first();
+                if ($delivery) {
+                    $delivery->update([
+                        'delivery_status' => 'shipped',
+                        'delivery_updated_at' => now(),
+                    ]);
+                }
             } else {
                 $order->update([
                     'order_status' => 'delivered',
                     'order_updated_at' => now(),
                 ]);
                 $delivery = Delivery::where('order_id', $id)->first();
-                $delivery->update([
-                    'delivery_status' => 'delivered',
-                    'delivery_updated_at' => now(),
-                ]);
+                if ($delivery) {
+                    $delivery->update([
+                        'delivery_status' => 'delivered',
+                        'delivery_updated_at' => now(),
+                    ]);
+                }
                 $payment = Payment::where('order_id', $id)->first();
-                $payment->update([
-                    'payment_status' => 'completed',
-                    'payment_updated_at' => now(),
-                ]);
+                if ($payment) {
+                    $payment->update([
+                        'payment_status' => 'completed',
+                        'payment_updated_at' => now(),
+                    ]);
+                }
             }
+
             DB::commit();
+
+            // Gửi thông báo qua email
             $user_email = User::find($order->user_id)->email;
             $content = 'Đơn hàng của bạn có mã đơn hàng là ' . $id . ' đã được cập nhật trạng thái thành: ' . $order->order_status;
             Log::info("Thêm jobs vào hàng đợi, Email:$user_email");
             Queue::push(new SendMailNotify($user_email, $content));
-            return $this->responseSuccess( 'Cập nhật trạng thái đơn hàng thành công!', 200);
+
+            $data = Order::where('order_id', $id)->first();
+            return $this->responseSuccessWithData($data, 'Cập nhật trạng thái đơn hàng thành ' . $order->order_status.' thành công!', 200);
         } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
@@ -609,7 +663,7 @@ class OrderService
             return $this->responseError($e->getMessage());
         }
     }
-    public function cancelPayment($orderCode, Request $request)
+    public function cancelPayment($orderCode)
     {
         try {
             $response = $this->payOSService->cancelPaymentLink($orderCode);
@@ -629,23 +683,31 @@ class OrderService
                 'payment_updated_at' => now(),
             ]);
             $order_details = $this->orderRepository->getDetailOrder($orderCode);
-            foreach ($order_details as $order_detail) {
-                // $product = Product::find($order_detail->product_id);
-                $product = Product::where('product_id', $order_detail->product_id)->first();
-                $product->update([
-                    'product_quantity' => $product->product_quantity + $order_detail->order_quantity,
-                    'product_sold' => $product->product_sold - $order_detail->order_quantity,
-                ]);
-                $importDetail = ImportDetail::where('product_id', $order_detail->product_id)->where('import_detail_id', $order_detail->import_detail_id)->first();
-                $importDetail->update([
-                    'retaining_quantity' => $importDetail->retaining_quantity + $order_detail->order_quantity,
-                ]);
-            }
+            $this->updateQuantityImportDetailAndProduct($orderCode);
             $order['order_detail'] = $order_details;
             $data=$order;
+            $userEmail = User::find($order->user_id)->email;
+            $content = 'Đơn hàng # ' . $order->order_id . ' của bạn đã bị hủy do không thanh toán trong thời gian quy định';
+            Log::info("Huỷ đơn hàng tự động qua Job, Email: " . $userEmail);
+            Queue::push(new SendMailNotify($userEmail, $content));
             return $this->responseSuccessWithData($data, "Đã huỷ đơn hàng!", 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
+        }
+    }
+    public function updateQuantityImportDetailAndProduct($orderId){
+        $orderDetails = OrderDetail::where('order_id', $orderId)->get();
+        foreach ($orderDetails as $orderDetail) {
+            $product = Product::find($orderDetail->product_id);
+            $product->update([
+                'product_quantity' => $product->product_quantity + $orderDetail->order_quantity,
+                'product_sold' => $product->product_sold - $orderDetail->order_quantity,
+            ]);
+            $importDetail = ImportDetail::where('product_id', $orderDetail->product_id)
+                ->where('import_detail_id', $orderDetail->import_detail_id)->first();
+            $importDetail->update([
+                'retaining_quantity' => $importDetail->retaining_quantity + $orderDetail->order_quantity,
+            ]);
         }
     }
 }

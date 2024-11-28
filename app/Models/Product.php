@@ -15,7 +15,6 @@ class Product extends Model
         'product_id',
         'brand_id',
         'category_id',
-        'category_parent_id',
         'product_name',
         'product_slug',
         'product_price',
@@ -53,5 +52,8 @@ class Product extends Model
     }
     public function importDetails(){
         return $this->hasMany(ImportDetail::class);
+    }
+    public function reviews(){
+        return $this->hasMany(Review::class);
     }
 }

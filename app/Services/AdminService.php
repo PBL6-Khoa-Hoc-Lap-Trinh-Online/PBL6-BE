@@ -374,7 +374,7 @@ class AdminService {
             $user = User::find($user_id);
 
             if (empty($user)) {
-                return $this->resonserError('Người dùng không tồn tại!');
+                return $this->responseError('Người dùng không tồn tại!');
             }
 
             $status_block = ! $user->user_is_block;
@@ -398,7 +398,7 @@ class AdminService {
             $user = User::find($user_id);
 
             if (empty($user)) {
-                return $this->resonserError('Người dùng không tồn tại!');
+                return $this->responseError('Người dùng không tồn tại!');
             }
 
             $status_delete = ! $user->user_is_delete;

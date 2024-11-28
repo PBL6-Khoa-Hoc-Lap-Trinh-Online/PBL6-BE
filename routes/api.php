@@ -16,7 +16,8 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartDetailController;
 use App\Http\Controllers\VietnamZoneController;
 use App\Http\Controllers\DiseaseController;
-
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Route;
@@ -165,7 +166,17 @@ Route::prefix('imports')->controller(ImportController::class)->group(function ()
         Route::get('', 'getAll');
     });
 });
-
+Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('add', 'add');
+        Route::post('update/{id}', 'update');
+        Route::post('delete/{id}', 'delete');
+    });
+    Route::get('product/{id}', 'getByProduct');
+    Route::get('user/{id}', 'getByUser');
+    Route::get('{id}', 'get');
+    Route::get('', 'getAll');
+});
 
 
 //user order
@@ -177,8 +188,9 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::post('cancel/{id}', 'cancelOrder');
         Route::get('history', 'getOrderHistory');
         Route::get('payos/{orderCode}', 'getPaymentInfo');
-        Route::post('payos/{orderCode}/cancel', 'cancelPayment');
+       
     });
+    Route::post('payos/{orderCode}/cancel', 'cancelPayment');
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('all', 'getAll');
         Route::get('detail-order/{id}','getDetailOrder');
@@ -212,7 +224,7 @@ Route::prefix('payments')->controller(PaymentController::class)->group(function 
 Route::prefix('delivery-methods')->controller(DeliveryController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('add', 'add');
-        Route::post('update/{id}', 'updateStatus');
+        Route::post('update/{id}', 'update');
         Route::get('all', 'getAllByAdmin');
         Route::get('{id}', 'get');
         Route::delete('{id}', 'delete');
@@ -263,18 +275,47 @@ Route::get('/districts/{provinceId}', [VietnamZoneController::class, 'getDistric
 Route::get('/wards/{districtId}', [VietnamZoneController::class, 'getWards']);
 
 
+
 //Disease
-Route::prefix('disease')->controller(DiseaseController::class)->group(function (){
+Route::prefix('disease')->controller(DiseaseController::class)->group(function () {
     Route::get('get', 'getDiseaseUser');
-    Route::get('getCategory/{id}','getDiseaseCategory');
+    Route::get('getCategory/{id}', 'getDiseaseCategory');
     Route::get('search', 'searchDisease');
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add','add');
-        Route::get('getAll','getAll');
-        Route::post('update/{id}','update');
-        Route::post('addCategory','addDiseaseCategory');
-        Route::post('deleteCategory','deleteDiseaseCategory');
+        Route::post('add', 'add');
+        Route::get('getAll', 'getAll');
+        Route::post('update/{id}', 'update');
+        Route::post('addCategory', 'addDiseaseCategory');
+        Route::post('deleteCategory', 'deleteDiseaseCategory');
+        Route::get('categoryDisease/{id}', 'getCategoryDisease');
+        Route::post('delete/{id}', 'deleteDisease');
     });
-    Route::get('{id}','get');
+    Route::get('{id}', 'get');
+});
 
+
+//Image 
+Route::prefix('image')->controller(ImageController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::post('upload', 'uploadImage');
+    });
+});
+
+
+
+//Reviews
+Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('{orderId}/{productId}', 'canReview');
+        Route::post('add', 'add');
+        Route::post('update/{id}', 'update');
+        Route::post('delete/{id}', 'delete');
+    });
+    Route::get('product/{id}', 'getByProduct');
+    Route::get('user/{id}', 'getByUser');
+    Route::get('{id}', 'get');
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('', 'getAll');
+        Route::post('hidden/{id}','hiddenReview');
+    });
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RequestAddProduct;
 use App\Http\Requests\RequestDeleteManyProduct;
 use App\Http\Requests\RequestDeleteProduct;
+use App\Http\Requests\RequestUpdateProduct;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -23,7 +24,7 @@ class ProductController extends Controller
     public function getAll(Request $request){
         return $this->productService->getAll($request);
     }
-    public function update(RequestAddProduct $request, $id){
+    public function update(RequestUpdateProduct $request, $id){
         return $this->productService->update($request, $id);
     }
     

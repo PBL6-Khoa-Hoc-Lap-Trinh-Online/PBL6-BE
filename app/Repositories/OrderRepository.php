@@ -44,6 +44,12 @@ class OrderRepository extends BaseRepository implements OrderInterface{
             ->when(!empty($filter->search), function ($q) use ($filter) {
                 $q->where(function ($query) use ($filter) {
                     $query->where('product_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('user_fullname', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('receiver_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('receiver_phone', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('province_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('district_name', 'LIKE', '%' . $filter->search . '%')
+                        ->orWhere('ward_name', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('payment_method', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('delivery_method', 'LIKE', '%' . $filter->search . '%')
                         ->orWhere('order_status', 'LIKE', '%' . $filter->search . '%')
@@ -56,6 +62,24 @@ class OrderRepository extends BaseRepository implements OrderInterface{
             })
             ->when(!empty($filter->order_status), function ($query) use ($filter) {
                 return $query->where('orders.order_status', '=', $filter->order_status);
+            })
+            ->when(!empty($filter->payment_status), function ($query) use ($filter) {
+                return $query->where('payment_status', '=', $filter->payment_status);
+            })
+            ->when(!empty($filter->delivery_status), function ($query) use ($filter) {
+                return $query->where('deliveries.delivery_status', '=', $filter->delivery_status);
+            })
+            ->when(!empty($filter->delivery_method_id), function ($query) use ($filter) {
+                return $query->where('deliveries.delivery_method_id', '=', $filter->delivery_method_id);
+            })
+            ->when(!empty($filter->payment_method_id), function ($query) use ($filter) {
+                return $query->where('payments.payment_method_id', '=', $filter->payment_method_id);
+            })
+            ->when(!empty($filter->delivery_method_name), function ($query) use ($filter) {
+                return $query->where('delivery_methods.delivery_method_name', 'LIKE', '%' . $filter->delivery_method_name . '%');
+            })
+            ->when(!empty($filter->payment_method_name), function ($query) use ($filter) {
+                return $query->where('payment_methods.payment_method_name', 'LIKE', '%' . $filter->payment_method_name . '%');
             })
             ->when(!empty($filter->from_date) || !empty($filter->to_date), function ($query) use ($filter) {
                 if (!empty($filter->from_date) && empty($filter->to_date)) {

@@ -41,8 +41,8 @@ class OrderController extends Controller
     {
         return $this->orderService->getPaymentInfo($orderCode);
     }
-    public function cancelPayment($orderCode, Request $request)
+    public function cancelPayment($orderCode)
     {
-        return $this->orderService->cancelPayment($orderCode, $request);
+        return $this->orderService->cancelPayment($orderCode);
     }
 }

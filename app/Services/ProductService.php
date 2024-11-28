@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Http\Requests\RequestAddProduct;
 use App\Http\Requests\RequestDeleteManyProduct;
 use App\Http\Requests\RequestDeleteProduct;
+use App\Http\Requests\RequestUpdateProduct;
 use App\Jobs\UploadImage;
 use App\Models\OrderDetail;
 use App\Models\Product;
@@ -43,74 +44,114 @@ class ProductService{
     }
     public function getAll($request){
         try {
-            $products = $this->getProducts($request);
-            $products=$products->where('product_is_delete','0')->values();
-            $data=$products;
+            $orderBy = $request->typesort ?? 'products.product_id';
+            switch ($orderBy) {
+                case 'product_name':
+                    $orderBy = 'products.product_name';
+                    break;
+                case 'product_price':
+                    $orderBy = 'products.product_price';
+                    break;
+                case 'product_sold':
+                    $orderBy = 'products.product_sold';
+                    break;
+                case 'product_quantity':
+                    $orderBy = 'products.product_quantity';
+                    break;
+                case 'new':
+                    $orderBy = 'products.product_id';
+                    break;
+                default:
+                    $orderBy = 'products.product_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'category_name' => $request->category_name ?? '',
+                'category_parent_name' => $request->category_parent_name ?? '',
+                'category_id' => $request->category_id ?? '',
+                'brand_names' => $request->brand_names ?? [],
+                'brand_id' => $request->brand_id ?? '',
+                'price_from' => $request->price_from ?? '',
+                'price_to' => $request->price_to ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+                'product_is_delete' =>0 ,
+            ];
+            $products = $this->productRepository->getAll($filter);
+            if (!empty($request->paginate)) {
+                $data= $products->paginate($request->paginate);
+            } else {
+                $data= $products->get();
+            }
             return $this->responseSuccessWithData($data, 'Danh sách sản phẩm!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
-    public function getProducts(Request $request){
-        $orderBy = $request->typesort ?? 'products.product_id';
-        switch($orderBy){
-            case 'product_name':
-                $orderBy = 'products.product_name';
-                break;
-            case 'product_price':
-                $orderBy = 'products.product_price';
-                break;
-            case 'product_sold':
-                $orderBy = 'products.product_sold';
-                break;
-            case 'product_quantity':
-                $orderBy = 'products.product_quantity';
-                break;
-            case 'new':
-                $orderBy='products.product_id';
-                break;
-            default:
-                $orderBy = 'products.product_id';
-                break;
-        }
-        $orderDirection = $request->sortlatest ?? 'true';
-        switch ($orderDirection) {
-            case 'true':
-                $orderDirection = 'DESC';
-                break;
-
-            default:
-                $orderDirection = 'ASC';
-                break;
-        }
-        $filter = (object) [
-            'search' => $request->search ?? '',
-            'category_name' => $request->category_name ?? '',
-            'category_parent_name'=>$request->category_parent_name ?? '',
-            'category_id' => $request->category_id ?? '',
-            'category_parent_id' => $request->category_parent_id ?? '',
-            'brand_names' =>$request->brand_names ?? [],
-            'brand_id' => $request->brand_id ?? '',
-            'price_from' =>$request->price_from ?? '',
-            'price_to' =>$request->price_to ?? '',
-            'orderBy' => $orderBy,
-            'orderDirection' => $orderDirection,
-            'product_is_delete' =>$request->product_is_delete ?? 'all',
-        ];
-        $products = $this->productRepository->getAll($filter);
-        if(!empty($request->paginate)){
-            $products = $products->paginate($request->paginate);
-        }
-        else{
-            $products = $products->get();
-        }
-        return $products;
-    }
-
     public function getAllByAdmin(Request $request)
     {
         try {
-            $data = $this->getProducts($request)->values();
+            $orderBy = $request->typesort ?? 'products.product_id';
+            switch ($orderBy) {
+                case 'product_name':
+                    $orderBy = 'products.product_name';
+                    break;
+                case 'product_price':
+                    $orderBy = 'products.product_price';
+                    break;
+                case 'product_sold':
+                    $orderBy = 'products.product_sold';
+                    break;
+                case 'product_quantity':
+                    $orderBy = 'products.product_quantity';
+                    break;
+                case 'new':
+                    $orderBy = 'products.product_id';
+                    break;
+                default:
+                    $orderBy = 'products.product_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'category_name' => $request->category_name ?? '',
+                'category_parent_name' => $request->category_parent_name ?? '',
+                'category_id' => $request->category_id ?? '',
+                'brand_names' => $request->brand_names ?? [],
+                'brand_id' => $request->brand_id ?? '',
+                'price_from' => $request->price_from ?? '',
+                'price_to' => $request->price_to ?? '',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+                'product_is_delete' => $request->product_is_delete ?? 'all',
+            ];
+            $products = $this->productRepository->getAll($filter);
+            if (!empty($request->paginate)) {
+                $data= $products->paginate($request->paginate);
+            } else {
+                $data= $products->get();
+            }
             return $this->responseSuccessWithData($data, 'Danh sách sản phẩm!', 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
@@ -164,7 +205,7 @@ class ProductService{
         }
     }
     //update when image upload AWS S3
-    public function update(RequestAddProduct $request, $id)
+    public function update(RequestUpdateProduct $request, $id)
     {
         DB::beginTransaction();
         try {

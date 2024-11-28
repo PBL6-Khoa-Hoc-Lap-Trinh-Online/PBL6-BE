@@ -32,9 +32,6 @@ class ProductRepository extends BaseRepository implements ProductInterface{
             ->when(!empty($filter->category_name), function ($query) use ($filter) {
                 return $query->where('categories.category_name', '=', $filter->category_name);
             })
-            ->when(!empty($filter->category_parent_id), function ($query) use ($filter) {
-                return $query->where('parents.category_id', '=', $filter->category_parent_id);
-            })
             ->when(!empty($filter->category_id), function ($query) use ($filter) {
                 return $query->where('categories.category_id', '=', $filter->category_id);
             })

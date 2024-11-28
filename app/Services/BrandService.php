@@ -122,48 +122,44 @@ class BrandService{
             return $this->responseError($e);
         }
     }
-    public function getBrands(Request $request){
-        $orderBy = $request->typesort ?? 'brand_id';
-        switch ($orderBy) {
-            case 'brand_name':
-                $orderBy = 'brand_name';
-                break;
-            case 'brand_slug':
-                $orderBy = 'brand_slug';
-                break;
-            case 'new':
-                $orderBy = "brand_id";
-                break;
-            default:
-                $orderBy = 'brand_id';
-                break;
-        }
-        $orderDirection = $request->sortlatest ?? 'true';
-        switch ($orderDirection) {
-            case 'true':
-                $orderDirection = 'DESC';
-                break;
-            default:
-                $orderDirection = 'ASC';
-                break;
-        }
-        $filter = (object) [
-            'search' => $request->search ?? '',
-            'brand_is_delete' => $request->brand_is_delete ?? 'all',
-            'orderBy' => $orderBy,
-            'orderDirection' => $orderDirection,
-        ];
-        $brands = BrandRepository::getAll($filter);
-        if (!(empty($request->paginate))) {
-            $brands = $brands->paginate($request->paginate);
-        } else {
-            $brands = $brands->get();
-        }
-        return $brands;
-    }
     public function getAll(Request $request){
         try{
-            $data = $this->getBrands($request)->where('brand_is_delete',0)->values();
+            $orderBy = $request->typesort ?? 'brand_id';
+            switch ($orderBy) {
+                case 'brand_name':
+                    $orderBy = 'brand_name';
+                    break;
+                case 'brand_slug':
+                    $orderBy = 'brand_slug';
+                    break;
+                case 'new':
+                    $orderBy = "brand_id";
+                    break;
+                default:
+                    $orderBy = 'brand_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'brand_is_delete' => 0,
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $brands = BrandRepository::getAll($filter);
+            if (!(empty($request->paginate))) {
+                $data = $brands->paginate($request->paginate);
+            } else {
+                $data = $brands->get();
+            }
             return $this->responseSuccessWithData($data, "Lấy danh sách brand thành công!");
         }
         catch(Throwable $e){
@@ -172,7 +168,42 @@ class BrandService{
     }
     public function getAllByAdmin(Request $request){
         try{
-            $data = $this->getBrands($request)->values();
+            $orderBy = $request->typesort ?? 'brand_id';
+            switch ($orderBy) {
+                case 'brand_name':
+                    $orderBy = 'brand_name';
+                    break;
+                case 'brand_slug':
+                    $orderBy = 'brand_slug';
+                    break;
+                case 'new':
+                    $orderBy = "brand_id";
+                    break;
+                default:
+                    $orderBy = 'brand_id';
+                    break;
+            }
+            $orderDirection = $request->sortlatest ?? 'true';
+            switch ($orderDirection) {
+                case 'true':
+                    $orderDirection = 'DESC';
+                    break;
+                default:
+                    $orderDirection = 'ASC';
+                    break;
+            }
+            $filter = (object) [
+                'search' => $request->search ?? '',
+                'brand_is_delete' => $request->brand_is_delete ?? 'all',
+                'orderBy' => $orderBy,
+                'orderDirection' => $orderDirection,
+            ];
+            $brands = BrandRepository::getAll($filter);
+            if (!(empty($request->paginate))) {
+                $data = $brands->paginate($request->paginate);
+            } else {
+                $data = $brands->get();
+            }
             return $this->responseSuccessWithData($data, "Lấy danh sách brand thành công!");
         }
         catch(Throwable $e){

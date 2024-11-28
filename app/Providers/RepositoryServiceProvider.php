@@ -37,6 +37,8 @@ use App\Repositories\DiseaseInterface;
 use App\Repositories\DiseaseRepository;
 use App\Repositories\PaymentMethodInterface;
 use App\Repositories\PaymentMethodRepository;
+use App\Repositories\ReviewInterface;
+use App\Repositories\ReviewRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -64,6 +66,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(DeliveryInterface::class, DeliveryRepository::class);
         $this->app->bind(PaymentMethodInterface::class, PaymentMethodRepository::class);
         $this->app->bind(DeliveryMethodInterface::class, DeliveryMethodRepository::class);
+        $this->app->bind(ReviewInterface::class, ReviewRepository::class);
 
     }
 

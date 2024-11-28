@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 namespace App\Services;
 
 use App\Http\Requests\RequestAddReceiverAddress;
@@ -23,61 +24,62 @@ class ReceiverAddressService
     public function add(RequestAddReceiverAddress $request)
     {
         DB::beginTransaction();
-        try{
+        try {
             $id_user = auth('user_api')->user()->user_id;
-            $data =array_merge($request->all(),['user_id'=>$id_user,'receiver_created_at'=>now()]);
-            $receiverAddress= ReceiverAddress::create($data);
+            $data = array_merge($request->all(), ['user_id' => $id_user, 'receiver_created_at' => now()]);
+            $receiverAddress = ReceiverAddress::create($data);
             DB::commit();
-            $data=$this->receiverAddressRepository->getAll((object)['receiver_address_id'=>$receiverAddress->receiver_address_id])->first();
-            return $this->responseSuccessWithData($data,'Thêm địa chỉ nhận hàng thành công!', 201);
-        }
-        catch(Throwable $e){
+            $data = $this->receiverAddressRepository->getAll((object)['receiver_address_id' => $receiverAddress->receiver_address_id])->first();
+            return $this->responseSuccessWithData($data, 'Thêm địa chỉ nhận hàng thành công!', 201);
+        } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }
-    public function getAddress(Request $request,$id){
-        try{
+    public function getAddress(Request $request, $id)
+    {
+        try {
             $user_id = auth('user_api')->user()->user_id;
-            $user= User::find($user_id);
-            if($user){
-                $data=$this->receiverAddressRepository->getAll((object)['receiver_address_id'=>$id,'user_id'=>$user_id])->first();
-                if($data){
-                    return $this->responseSuccessWithData($data,'Lấy địa chỉ nhận hàng thành công!', 200);
-                }
-                else{
-                    return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
+            $user = User::find($user_id);
+            if ($user) {
+                $data = $this->receiverAddressRepository->getAll((object)['receiver_address_id' => $id, 'user_id' => $user_id])->first();
+                if ($data) {
+                    return $this->responseSuccessWithData($data, 'Lấy địa chỉ nhận hàng thành công!', 200);
+                } else {
+                    return $this->responseError('Không tìm thấy địa chỉ nhận hàng!', 400);
                 }
             }
-        }
-        catch(Throwable $e){
+        } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
-    public function update(RequestUserUpdateAddress $request,$id){
+    public function update(RequestUserUpdateAddress $request, $id)
+    {
         DB::beginTransaction();
-        try{
+        try {
             $user_id = auth('user_api')->user()->user_id;
-            $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
-            if($receiver_address){
-                $receiver_address->update($request->all(),[
-                    'receiver_updated_at'=>now()
+            // $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
+            $receiver_address = ReceiverAddress::where('receiver_address_id', $id)
+                ->where('user_id', $user_id)
+                ->where('receiver_addresses_delete', 0)->first();
+            if ($receiver_address) {
+                $receiver_address->update($request->all(), [
+                    'receiver_updated_at' => now()
                 ]);
                 DB::commit();
                 $data = $this->receiverAddressRepository->getAll((object)['receiver_address_id' => $id, 'user_id' => $user_id])->first();
-                return $this->responseSuccessWithData($data,'Cập nhật địa chỉ nhận hàng thành công!', 200);
+                return $this->responseSuccessWithData($data, 'Cập nhật địa chỉ nhận hàng thành công!', 200);
+            } else {
+                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!', 400);
             }
-            else{
-                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
-            }
-        }
-        catch(Throwable $e){
+        } catch (Throwable $e) {
             DB::rollBack();
             return $this->responseError($e->getMessage());
         }
     }
-    public function getAll(Request $request){
-        try{
+    public function getAll(Request $request)
+    {
+        try {
             $orderBy = $request->typesort ?? 'receiver_address_id';
             switch ($orderBy) {
                 case 'receiver_name':
@@ -109,47 +111,50 @@ class ReceiverAddressService
                 'user_id' => auth('user_api')->user()->user_id
             ];
             $receiver_address = $this->receiverAddressRepository->getAll($filter);
-            if($request->paginate){
+            if ($request->paginate) {
                 $receiver_address = $receiver_address->paginate($request->paginate);
-            }
-            else{
+            } else {
                 $receiver_address = $receiver_address->get();
             }
 
-            if(!empty($receiver_address)){
-                $data=$receiver_address;
-                return $this->responseSuccessWithData($data,'Lấy tất cả địa chỉ nhận hàng thành công!', 200);
+            if (!empty($receiver_address)) {
+                $data = $receiver_address;
+                return $this->responseSuccessWithData($data, 'Lấy tất cả địa chỉ nhận hàng thành công!', 200);
+            } else {
+                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!', 404);
             }
-            else{
-                return $this->responseError('Không tìm thấy địa chỉ nhận hàng!',404);
-            }
-        }
-        catch(Throwable $e){
+        } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
-    public function delete(Request $request,$id){
+    public function delete(Request $request, $id)
+    {
         DB::beginTransaction();
-        try{
+        try {
             $user_id = auth('user_api')->user()->user_id;
-            $receiver_address = ReceiverAddress::where('receiver_address_id',$id)->where('user_id',$user_id)->first();
-            if($receiver_address){
-                $order=Order::where('receiver_address_id',$id)->first();
-                if($order){
-                    return $this->responseError('Địa chỉ nhận hàng đang được sử dụng không được xoá!');
+            $receiver_address = ReceiverAddress::where('receiver_address_id', $id)->where('user_id', $user_id)->first();
+            if ($receiver_address) {
+                // $order=Order::where('receiver_address_id',$id)->first();
+                // if($order){
+                //     return $this->responseError('Địa chỉ nhận hàng đang được sử dụng không được xoá!');
+                // }
+                // $receiver_address->delete();
+                // DB::commit();
+                // return $this->responseSuccess('Xóa địa chỉ nhận hàng thành công!', 200);
+                if ($receiver_address->receiver_addresses_delete == 0) {
+                    $receiver_address->receiver_addresses_delete = 1;
+                    $receiver_address->save();
+                    DB::commit();
+                    return $this->responseSuccess('Xóa địa chỉ nhận hàng thành công!', 200);
+                } else {
+                    return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
                 }
-                $receiver_address->delete();
-                DB::commit();
-                return $this->responseSuccess('Xóa địa chỉ nhận hàng thành công!', 200);
-            }
-            else{
+            } else {
                 return $this->responseError('Không tìm thấy địa chỉ nhận hàng!');
             }
-        }
-        catch(Throwable $e){
+        } catch (Throwable $e) {
             DB::rollBack();
-            return $this->responseError($e->getMessage());  
+            return $this->responseError($e->getMessage());
         }
     }
-
 }
