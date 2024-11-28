@@ -188,11 +188,14 @@ class ReviewService{
         }
         return $this->responseSuccessWithData($data, 'Lấy đánh giá sản phẩm thành công!', 200);
     }
-    public function getByUser(Request $request,$userId){
-       // $reviews = Review::where('user_id',$userId)->where('is_approved', 1)->get();
+    public function getByUser(Request $request){
+        // $reviews = Review::where('user_id',$userId)->where('is_approved', 1)->get();
+        // $user_id = auth('user_api')->user()->user_id;
+        $userId=auth('user_api')->user()->user_id;
+        dump($userId);
         $reviews= $this->reviewRepository->getAll((object)['user_id'=>$userId,'is_approved'=>1]);
         if ($reviews->get()->isEmpty()) {
-            return $this->responseError('Không có đánh giá!', 404);
+            return $this->responseError('Bạn không có đánh giá nào!', 404);
         }
 
         if (!(empty($request->paginate))) {

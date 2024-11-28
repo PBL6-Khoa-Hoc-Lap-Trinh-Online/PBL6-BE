@@ -33,9 +33,9 @@ class ReviewController extends Controller
     {
         return $this->reviewService->getByProduct($request,$productId);
     }
-    public function getByUser(Request $request,$userId)
+    public function getByUser(Request $request)
     {
-        return $this->reviewService->getByUser($request,$userId);
+        return $this->reviewService->getByUser($request);
     }
     public function get(Request $request,$reviewId)
     {

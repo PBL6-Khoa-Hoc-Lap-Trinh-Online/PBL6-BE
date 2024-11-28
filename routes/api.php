@@ -305,13 +305,13 @@ Route::prefix('image')->controller(ImageController::class)->group(function () {
 //Reviews
 Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
     Route::middleware('check.auth:user_api')->group(function () {
+        Route::get('history', 'getByUser');
         Route::get('{orderId}/{productId}', 'canReview');
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::post('delete/{id}', 'delete');
     });
     Route::get('product/{id}', 'getByProduct');
-    Route::get('user/{id}', 'getByUser');
     Route::get('{id}', 'get');
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('', 'getAll');

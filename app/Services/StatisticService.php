@@ -196,8 +196,8 @@ class StatisticService
         ];
         return $data;
     }
-    public function getTopProduct(Request $reqeust){
-        $year = $reqeust->year ?? Carbon::now();
+    public function getTopProduct(Request $request){
+        $year = $request->year ?? Carbon::now();
         $topProducts = Order::where('order_status', 'delivered')
         ->whereYear('order_created_at', $year)
         ->join('order_details', 'orders.order_id', '=', 'order_details.order_id')
