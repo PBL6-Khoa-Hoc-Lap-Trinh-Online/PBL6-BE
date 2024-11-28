@@ -125,7 +125,7 @@ class OrderService
     {
         DB::beginTransaction();
         try {
-            $product = Product::where('product_id', $request->product_id)->first();
+            $product = Product::lockForUpdate()->where('product_id', $request->product_id)->first();
             $user = auth('user_api')->user();
 
             if (empty($product)) {
@@ -201,7 +201,7 @@ class OrderService
                 return $this->responseError('Giỏ hàng rỗng!', 404);
             }
             foreach ($carts as $cart) {
-                $product = Product::where('product_id', $cart->product_id)->where('product_is_delete', '0')->first();
+                $product = Product::lockForUpdate()->where('product_id', $cart->product_id)->where('product_is_delete', '0')->first();
                 if (empty($product)) {
                     return $this->responseError('Sản phẩm không tồn tại!', 404);
                 }
