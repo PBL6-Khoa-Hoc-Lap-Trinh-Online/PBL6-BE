@@ -16,7 +16,8 @@ class ImageService
     public function uploadImage(Request $request)
     {
         try {
-            if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            if($request->hasFile('image') && $request->file('image')->isValid()){
+
                 $image = $request->file('image');
                 $uploadFile = Cloudinary::upload($image->getRealPath(), [
                     'folder' => 'pbl6_pharmacity/avatar/image',

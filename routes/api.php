@@ -295,13 +295,12 @@ Route::prefix('disease')->controller(DiseaseController::class)->group(function (
 
 
 //Image 
+
 Route::prefix('image')->controller(ImageController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('upload', 'uploadImage');
     });
 });
-
-
 
 //Reviews
 Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
@@ -317,5 +316,6 @@ Route::prefix('reviews')->controller(ReviewController::class)->group(function ()
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('', 'getAll');
         Route::post('hidden/{id}','hiddenReview');
+
     });
 });

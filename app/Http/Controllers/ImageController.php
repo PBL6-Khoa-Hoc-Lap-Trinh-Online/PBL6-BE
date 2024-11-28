@@ -12,8 +12,8 @@ class ImageController extends Controller
     {
         $this->imageService = $imageService;
     }
-    public function uploadImage(Request $request)
-    {
+    public function uploadImage(Request $request){
+
         return $this->imageService->uploadImage($request);
     }
 }
