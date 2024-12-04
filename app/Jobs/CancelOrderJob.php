@@ -38,7 +38,11 @@ class CancelOrderJob implements ShouldQueue
         $order = $this->order;
         $payment = Payment::where('order_id', $order->order_id)->first();
         if($payment && $payment->payment_status=='pending'){
-            $orderCode=$order->order_id;
+            $orderCode = $order->order_id;
+            // if($payment->payment_method_id==3){
+            //     $apiUrl =  UserEnum::URL_SERVER2."/orders/cancel/$orderCode";
+            // }
+           
             $apiUrl =  UserEnum::URL_SERVER2."/orders/payos/$orderCode/cancel";
             try{
                 $response=Http::post($apiUrl);

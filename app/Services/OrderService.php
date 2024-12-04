@@ -170,6 +170,7 @@ class OrderService
             }
             else if($payment_method_id == 3){
                 $order_id=$order->order_id;
+                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
                 return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
             }
             $order['order_detail'] = $this->groupOrderDetailByProductId($orderDetail);
@@ -262,6 +263,7 @@ class OrderService
                 return $this->handlePayOSPayment($orderId, $order_total_amount);
             } else if ($payment_method_id == 3) {
                 $order_id = $order->order_id;
+                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
                 return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
             }
            $data=$order;

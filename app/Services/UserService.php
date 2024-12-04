@@ -162,7 +162,7 @@ class UserService
             $data=$user;
             return $this->responseSuccessWithData($data, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
             return $this->responseError($e->getMessage());
         }
     }

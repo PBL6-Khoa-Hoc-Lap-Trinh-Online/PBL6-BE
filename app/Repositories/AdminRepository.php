@@ -14,7 +14,13 @@ class AdminRepository extends BaseRepository implements AdminInterface{
                $query->where('admin_fullname','LIKE','%'.$filter->search.'%')
                ->orWhere('email','LIKE','%'.$filter->search.'%');
            });
-            })->when(!empty($filter->orderBy),function($query) use ($filter){
+            })
+            ->when(isset($filter->admin_is_delete),function($query) use ($filter){
+                if($filter->admin_is_delete !== 'all'){
+                    $query->where('admins.admin_is_delete',$filter->admin_is_delete);
+                }
+            })
+            ->when(!empty($filter->orderBy),function($query) use ($filter){
            $query->orderBy($filter->orderBy,$filter->orderDirection);
             });
         return $data;

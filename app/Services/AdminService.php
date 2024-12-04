@@ -264,8 +264,8 @@ class AdminService {
             }
             $filter= (object) [
                 'search' => $request->search ?? '',
-                'user_is_delete' => $request->user_is_delete ?? '0',
-                'user_is_block' => $request->user_is_block ?? '0',
+                'user_is_delete' => $request->user_is_delete ?? 'all',
+                'user_is_block' => $request->user_is_block ?? 'all',
                 'orderBy' => $orderBy,
                 'orderDirection' => $orderDirection,
             ];
