@@ -30,10 +30,12 @@ class OrderService
     use APIResponse;
     protected OrderInterface $orderRepository;
     protected PayOSService $payOSService;
+    protected VnpayService $vnpayService;
     public function __construct(OrderInterface $orderRepository)
     {
         $this->orderRepository = $orderRepository;
         $this->payOSService = new PayOSService();
+        $this->vnpayService = new VnpayService();
     }
     public function getImportDetailsForOrder($productId, $orderQuantity)
     {
@@ -154,7 +156,7 @@ class OrderService
             if ($payment_method_id == 1) {
                 $delivery_fee = $order_total_amount;
             }
-            else if ($payment_method_id == 2) {
+            else if ($payment_method_id == 2 || $payment_method_id == 3 ) {
                $delivery_fee=0;
             }
             $this->createDeliveriesRecord($order, $request->delivery_id, $delivery_fee);
@@ -165,6 +167,10 @@ class OrderService
                 CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
                 $order_id=$order->order_id;
                 return $this->handlePayOSPayment($order_id, $order_total_amount);
+            }
+            else if($payment_method_id == 3){
+                $order_id=$order->order_id;
+                return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
             }
             $order['order_detail'] = $this->groupOrderDetailByProductId($orderDetail);
             $data = $order;
@@ -232,9 +238,9 @@ class OrderService
             $order_total_amount = $order->order_total_amount;
             if ($payment_method_id == 1) {
                 $delivery_fee = $order_total_amount;
-            } else if ($payment_method_id == 2) {
+            } else if ($payment_method_id == 2 || $payment_method_id == 3) {
                 $delivery_fee = 0;
-            }
+            } 
             $this->createDeliveriesRecord($order, $request->delivery_id, $delivery_fee);
             $order = Order::where('order_id', $order->order_id)->first();
             $order['order_status'] = $order->order_status;
@@ -254,8 +260,10 @@ class OrderService
                 $orderId=$order->order_id;
                 CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
                 return $this->handlePayOSPayment($orderId, $order_total_amount);
+            } else if ($payment_method_id == 3) {
+                $order_id = $order->order_id;
+                return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
             }
-           
            $data=$order;
             return $this->responseSuccessWithData($data, 'Đặt hàng thành công!', 200);
         } catch (Throwable $th) {

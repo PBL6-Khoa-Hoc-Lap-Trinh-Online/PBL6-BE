@@ -57,4 +57,9 @@ class PaymentController extends Controller
     {
         return $this->paymentService->handlePayOSWebhook($request);
     }
+    //payment vnpay
+    public function vnPayReturn(Request $request)
+    {
+        return $this->paymentService->vnPayReturn($request);
+    }
 }

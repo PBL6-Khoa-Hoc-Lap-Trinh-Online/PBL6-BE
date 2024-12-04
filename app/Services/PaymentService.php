@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Requests\RequestAddPaymentMethod;
 use App\Http\Requests\RequestUpdatePaymentMethod;
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
@@ -321,19 +322,79 @@ class PaymentService
         $status = $body["data"]["code"];
         if($status =="00"){
             $payment->update([
-                "payment_status" => "completed"
+                "payment_status" => "completed",
+                'payment_at'=>now(),
+                'payment_updated_at'=>now()
             ]);
         }
         else{
             $payment->update([
-                "payment_status" => "failed"
+                "payment_status" => "failed",
+                'payment_updated_at'=>now()
             ]);
         }
         $data=$payment;
         return $this->responseSuccessWithData($data, "Cập nhật trạng thái thanh toán thành công!", 200);
-        
     }
-    
+    public function vnPayReturn(Request $request)
+    {
+        try {
+            $vnp_SecureHash = $_GET['vnp_SecureHash'];
+            $vnp_HashSecret = "J7HVWBXWWJMPSMAU02WU365SX7E4KOXJ";
+            $inputData = array();
+            foreach ($_GET as $key => $value) {
+                if (substr($key, 0, 4) == "vnp_") {
+                    $inputData[$key] = $value;
+                }
+            }
+            unset($inputData['vnp_SecureHash']);
+            ksort($inputData);
+            $i = 0;
+            $hashData = "";
+            foreach ($inputData as $key => $value) {
+                if ($i == 1) {
+                    $hashData = $hashData . '&' . urlencode($key) . "=" . urlencode($value);
+                } else {
+                    $hashData = $hashData . urlencode($key) . "=" . urlencode($value);
+                    $i = 1;
+                }
+            }
+
+            $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+            if ($secureHash == $vnp_SecureHash) {
+                if ($_GET['vnp_ResponseCode'] == '00') {
+                    $orderId=$_GET['vnp_TxnRef'];
+                    $paymentAt=$_GET['vnp_PayDate'];
+                    $payment=Payment::where('order_id',$orderId)->first();
+                    $payment->update(['payment_status' => 'completed','payment_at'=>$paymentAt,'payment_updated_at'=>now()]);
+
+                    return $this->responseSuccess("Thanh toán thành công!", 200);
+                } else {
+                    $orderId=$_GET['vnp_TxnRef'];
+                    $payment=Payment::where('order_id',$orderId)->first();
+                    $payment->update(['payment_status' => 'failed','payment_updated_at'=>now()]);
+                    $order=Order::where('order_id',$orderId)->first();
+                    $order->update(['order_status' => 'cancelled','order_updated_at'=>now()]);
+                    $delivery=Delivery::where('order_id',$orderId)->first();
+                    $delivery->update(['delivery_status' => 'cancelled','delivery_updated_at'=>now()]);
+                    return $this->responseError("Thanh toán thất bại!", 400);
+                    // echo "GD Khong thanh cong";
+                }
+            } else {
+                $orderId = $_GET['vnp_TxnRef'];
+                $payment = Payment::where('order_id', $orderId)->first();
+                $payment->update(['payment_status' => 'failed', 'payment_updated_at' => now()]);
+                $order = Order::where('order_id', $orderId)->first();
+                $order->update(['order_status' => 'cancelled', 'order_updated_at' => now()]);
+                $delivery = Delivery::where('order_id', $orderId)->first();
+                $delivery->update(['delivery_status' => 'cancelled', 'delivery_updated_at' => now()]);
+                return $this->responseError("Chữ ký không hợp lệ", 400);
+            }
+            
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
+    } 
    
 
 }

@@ -188,7 +188,7 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::post('cancel/{id}', 'cancelOrder');
         Route::get('history', 'getOrderHistory');
         Route::get('payos/{orderCode}', 'getPaymentInfo');
-       
+      
     });
     Route::post('payos/{orderCode}/cancel', 'cancelPayment');
     Route::middleware('check.auth:admin_api')->group(function () {
@@ -211,10 +211,14 @@ Route::prefix('payment-methods')->controller(PaymentController::class)->group(fu
 
 //payment
 Route::prefix('payments')->controller(PaymentController::class)->group(function () {
+    Route::get('vnpay-return', 'vnpayReturn');
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::post('update/{id}', 'updateStatus');
         Route::get('all', 'managePayment');
-        Route::get('{id}', 'getPaymentDetail');  
+        Route::get('{id}', 'getPaymentDetail');
+    });
+    Route::middleware('check.auth:user_api')->group(function () {
+        Route::post('vnpay', 'createVnPayPayment');
     });
     Route::post('webhook', 'handlePayOSWebhook');
     Route::get('', 'getAll');
