@@ -322,6 +322,7 @@ class AdminService {
             $filter = (object) [
                 'search' => $request->search ?? '',
                 'orderBy' => $orderBy,
+                'admin_is_delete' => $request->admin_is_delete ?? 'all',
                 'orderDirection' => $orderDirection,
             ];
             $admins = $this->adminRepository->getAllAdmin($filter);
