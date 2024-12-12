@@ -515,7 +515,7 @@ class AdminService {
                 'admin_fullname' => $request->admin_fullname,
                 'email' => $request->email,
                 // 'password' => Hash::make(Str::random(8)),
-                'role_id'=> $request->role_id,
+                'role_id'=> 1,
                 'password' => Str::random(8),
                 'admin_created_at' => now(),
 

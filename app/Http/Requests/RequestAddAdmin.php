@@ -29,7 +29,6 @@ class RequestAddAdmin extends FormRequest
         return [
             'admin_fullname' => 'required|string',
             'email' => 'required|unique:admins,email|string|email|max:100',
-            'role_id'=>'required|exists:roles,role_id',
             // 'password' => 'required|string|min:6|confirmed',
         ];
     }
