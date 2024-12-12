@@ -2,11 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Traits\APIResponse;
 use Closure;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 class CheckRole
 {
+    use APIResponse;
     /**
      * Handle an incoming request.
      *
@@ -18,16 +20,16 @@ class CheckRole
     {
         $admin = auth('admin_api')->user();
         if (! $admin) {
-            return response()->json(['status' => 'Unauthorized'],401); 
+            return response()->json(['status' => 'Bạn không có quyền truy cập!'], 403); 
+            // return $this->responseError('Unauthorized', 401);
         }
-        // if ($admin->admin_is_admin = 0) {
-        //     return response()->json(['message' => 'Bạn không có quyền truy cập!'], 403);
-        // }
-
-        if (in_array($admin->admin_is_admin,$roles)){
+        $roleName = DB::table('roles')
+                    ->where('role_id', $admin->role_id) // Sửa thành 'where'
+                    ->value('role_name');
+        if (in_array($roleName,$roles)){
             return $next($request);
         }
-        
+        // return $this->responseError('Forbidden', 403);
         return response()->json(['status' => 'Bạn không có quyền truy cập!'],403); 
     }
 }

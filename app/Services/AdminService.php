@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\AdminEnum;
 
+use App\Repositories\RoleInterface;
 use App\Traits\APIResponse;
 
 use Illuminate\Http\Request;
@@ -32,6 +33,8 @@ use App\Jobs\SendMailNotify;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\PasswordReset;
+use App\Models\Role;
+use App\Repositories\RoleRepository;
 use App\Repositories\UserInterface;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Throwable;
@@ -44,6 +47,133 @@ class AdminService {
     {
         $this->adminRepository = $adminRepository;
         $this->userRepository = $userRepository;
+    }
+    // Gán quyền trực tiếp cho Admin( Admin - Permission)
+    public function assignPermissionToAdmin(Request $request,$admin_id){
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'permission_ids' => 'required|array',
+                'permission_ids.*' => 'integer|exists:permissions,permission_id'
+            ]);
+            $admin = Admin::find($admin_id);
+            if(!$admin){
+                return $this->responseError('Admin không tồn tại',404);
+            }
+            //Lấy danh sách quyền trực tiếp đã có từ DB
+            $existingPermission=DB::table('admin_permission')
+                                ->where('admin_id',$admin->admin_id)
+                                ->whereIn('permission_id',$request->permission_ids)
+                                ->pluck('permission_id')
+                                ->toArray();
+            $permissionOfRole=DB::table('role_permission')
+                                ->join('roles','role_permission.role_id','=','roles.role_id')
+                                ->where('roles.role_id',$admin->role_id)
+                                ->pluck('permission_id')
+                                ->toArray();
+            $permissionAll=array_unique(array_merge($existingPermission,$permissionOfRole));
+            //Loại bỏ các quyền trùng lặp
+            $newPermission=array_diff($request->permission_ids, $permissionAll);
+            if(!empty($newPermission)){
+                //Gán quyền mới 
+                $insertData=array_map(function($permission_id) use ($admin){
+                    return [
+                        'admin_id'=>$admin->admin_id,
+                        'permission_id'=>$permission_id,
+                        'created_at'=>now(),
+                        'updated_at'=>now()
+                    ];
+                },$newPermission);
+                DB::table('admin_permission')->insert($insertData);
+                DB::commit();
+                return $this->responseSuccess('Gán permission thành công',200);
+            }
+            else{
+                return $this->responseError('Các permission đã tồn tại trong admin',400);
+            }
+           
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage(),500);
+        }
+    }
+   public function changeRole(Request $request){
+        DB::beginTransaction();
+        try{
+            $request->validate(
+                [
+                    'role_id' => 'required|integer|exists:roles,role_id',
+                ]
+            );
+            $admin_id = $request->route('id');
+            $admin = Admin::find($admin_id);
+            if(!$admin){
+                return $this->responseError('Admin không tồn tại',404);
+            }
+            $role_id = $request->role_id;
+            $admin->update(['role_id' => $role_id]);
+            DB::commit();
+            return $this->responseSuccess('Gán role thành công',200);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage(), 500);
+        }
+   }
+   public function hasPermission(int $admin_id): bool{
+        return DB::table('admin_permission')->where('admin_id', $admin_id)->exists();
+   }
+    public function removePermissionFromAdmin(Request $request,$admin_id){
+        DB::beginTransaction();
+        try{
+            $request->validate([
+                'permission_ids' => 'required|array',
+                'permission_ids.*' => 'integer|exists:permissions,permission_id'
+            ]);
+            $admin = Admin::find($admin_id);
+            if (!$admin) {
+                return $this->responseError('Admin không tồn tại', 404);
+            }
+            if(!$this->hasPermission($admin_id)){
+                return $this->responseError('Admin không có permission riêng',404);
+            }
+            $deleted = DB::table('admin_permission')
+                        ->where('admin_id',$admin->admin_id)
+                        ->whereIn('permission_id',$request->permission_ids)
+                        ->delete();
+            if($deleted){
+                DB::commit();
+                return $this->responseSuccess('Thu hồi permission thành công',200);
+            }
+            return $this->responseError('Thu hồi permission thất bại',500);
+            
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return $this->responseError($e->getMessage(), 500);
+        }
+    }
+    public function getPermissionAndRoleName($admin)
+    {
+        $roleId = $admin->role_id;
+        $roleName = Role::where('role_id', $roleId)->pluck('role_name')->get(0);
+        $admin->role_name = $roleName;
+        $permissions = RoleRepository::getPermissionByRole($roleId);
+        $admin->permission_by_role = $permissions;
+        $admin->permission_private = $this->adminRepository->getPermissionOfAdmin($admin->admin_id)->get();
+        return $admin;
+    }
+    public function getById($id)
+    {
+        try {
+            $admin = Admin::find($id);
+            if (empty($admin)) {
+                return $this->responseError('Không tìm thấy quản trị viên', 404);
+            }
+            $admin = $this->getPermissionAndRoleName($admin);
+            $data = $admin;
+            return $this->responseSuccessWithData($data, 'Lấy thông tin quản trị viên thành công');
+        } catch (Throwable $e) {
+            return $this->responseError($e->getMessage());
+        }
     }
     public function login(RequestLogin $request)
     {
@@ -143,15 +273,17 @@ class AdminService {
             return $this->responseError($e->getMessage());
         }
     }
+  
     public function profile(){
         try {
-            $data = auth('admin_api')->user();
+            $admin = auth('admin_api')->user();
+            $$admin = $this->getPermissionAndRoleName($admin);
+            $data = $admin;
             return $this->responseSuccessWithData($data,'Lấy thông tin quản trị viên thành công');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
-
     public function updateProfile(RequestUpdateProfileAdmin $request){
         DB::beginTransaction();
         try {
@@ -181,26 +313,6 @@ class AdminService {
                 $request['admin_avatar'] = $admin->admin_avatar;
                 $admin->update($request->all(),['admin_updated_at'=>now()]);
             }
-
-            // Check update email
-            // if ($email_admin != $request->email) {
-            //     $token = Str::random(32);
-            //     $url = AdminEnum::VERIFY_MAIL_ADMIN . $token;
-            //     Log::info("Thêm jobs vào hàng đợi, Email:$request->email, with url: $url");
-            //     Queue::push(new SendVerifyEmail($request->email, $url));
-                
-            //     $content = 'Email của bạn đã được thay đổi thành ' . $admin->email . '.';
-            //     Queue::push(new SendMailNotify($email_admin, $content));
-                
-            //     $data = [
-            //         'token_verify_email' => $token,
-            //         'email_verified_at' => null,
-            //     ];
-            //     $admin->update($data);
-            //     DB::commit();
-                
-            //     return $this->responseSuccessWithData($admin, 'Cập nhật thông tin tài khoản thành công! Vui lòng kiểm tra email để xác thực tài khoản!', 200);
-            // }
 
             DB::commit();
             $data=$admin;
@@ -277,21 +389,16 @@ class AdminService {
                 $users = $users->get();
             }
 
-
-            // // $users = User::all();
-            // $users = User::paginate(20);
-            // if ($users->isEmpty()) {
-            //     return $this->responseError('Không có người dùng nào trong hệ thống!');
-            // }
             $data=$users;
-            return $this->responseSuccessWithData($data, 'Danh sách người dùng được lấy thành công!');
+            return $this->responseSuccessWithData($data, 'Lấy danh sách người dùng thành công!');
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
-
+    
     public function manageAdmins(Request $request){
         try {
+            $adminId=auth('admin_api')->user()->admin_id;
             $orderBy = $request->orderBy ?? 'admin_id';
             $orderDirection = $request->sortlatest ?? 'true';
             switch ($orderBy) {
@@ -323,46 +430,22 @@ class AdminService {
                 'search' => $request->search ?? '',
                 'orderBy' => $orderBy,
                 'admin_is_delete' => $request->admin_is_delete ?? 'all',
+                'admin_id' => $adminId ??'',
+                'role_id' => $request->role_id ?? '',
+                'role_name' => $request->role_name??'' ,
                 'orderDirection' => $orderDirection,
             ];
             $admins = $this->adminRepository->getAllAdmin($filter);
+            if($admins->get()->isEmpty()){
+                return $this->responseError('Không tìm thấy quản trị viên',404);
+            }
             if (!(empty($request->paginate))) {
                 $admins = $admins->paginate($request->paginate);
             } else {
                 $admins = $admins->get();
             }
-            // $admins = Admin::paginate(20);
-            // if ($admins->isEmpty()) {
-            //     return $this->responseError('Không có quản trị viên nào trong hệ thống!');
-            // }
             $data = $admins;
             return $this->responseSuccessWithData($data, 'Danh sách quản trị viên được lấy thành công!');
-        } catch (Throwable $e) {
-            return $this->responseError($e->getMessage());
-        }
-    }
-
-    public function changeRole(Request $request){
-        DB::beginTransaction();
-        try {
-            $id_change = $request->route('id');
-            $admin_change = Admin::find($id_change);
-
-            if (empty($admin_change)){
-                return $this->responseError('Quản trị viên không tồn tại');
-            }
-
-            $currentAdminId = auth('admin_api')->user()->admin_id;
-            if ($currentAdminId == $admin_change->admin_id) {
-                DB::rollback();
-                return $this->responseError('Bạn không thể thay đổi vai trò của chính mình!', 403);
-            }
-
-            $new_role = ['admin_is_admin' => ! $admin_change->admin_is_admin];
-            $admin_change->update($new_role, ['admin_updated_at' => now()]);
-            DB::commit();
-            $content = ($admin_change->admin_is_admin == 0) ? 'Admin' : 'SuperAdmin'; 
-            return $this->responseSuccess("Đã cập nhật vai trò quản trị viên thành $content");
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
@@ -414,6 +497,11 @@ class AdminService {
         }
 
     }
+    //Add admin yêu cầu request thêm role_id 
+    // Chỉ hiện thị role_id của admin và supper admin cho manager chọn
+    // Nếu mở rộng thì Supperadmin quản lý danh sách admin --> Thêm admin
+    // Manager quản lý SupperAdmin và Admin--> Thêm Admin và SupperAdmin đều được
+    // Vậy việc hiển thị role cho Manager hay SupperAdmin cần có một điều kiện
 
     public function addAdmin(RequestAddAdmin $request){
         DB::beginTransaction();
@@ -427,6 +515,7 @@ class AdminService {
                 'admin_fullname' => $request->admin_fullname,
                 'email' => $request->email,
                 // 'password' => Hash::make(Str::random(8)),
+                'role_id'=> $request->role_id,
                 'password' => Str::random(8),
                 'admin_created_at' => now(),
 

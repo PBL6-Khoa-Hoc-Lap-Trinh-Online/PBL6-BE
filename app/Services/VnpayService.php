@@ -3,13 +3,14 @@ namespace App\Services;
 
 use App\Enums\UserEnum;
 use App\Models\Order;
+
 use App\Traits\APIResponse;
 use Throwable;
 use Illuminate\Http\Request;
-class VnpayService{
+class VnpayService implements PaymentServiceInterface{
     use APIResponse;
-
-    public function createVnPayPayment($orderId, $oderTotalAmount)
+   
+    public function handlePayment($orderId, $oderTotalAmount)
     {
         try {
             $order = Order::find($orderId);
@@ -79,11 +80,12 @@ class VnpayService{
                 die();
             } else {
                 // echo json_encode($returnData);
-                return $this->responseSuccessWithData($data, "Vui lòng thanh toán hoá đơn!", 200);
+                return $data;
             }
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
         }
     }
+    
    
 }

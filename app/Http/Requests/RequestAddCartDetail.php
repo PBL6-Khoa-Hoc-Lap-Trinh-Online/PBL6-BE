@@ -49,24 +49,11 @@ class RequestAddCartDetail extends FormRequest
         return $this->responseErrorValidate($errors, $validator);
     }
 
-    /**
-     * Custom validation messages.
-     *
-     * @return array<string, string>
-     */
     public function messages()
     {
         return [
-            // 'cart_id.required' => 'Cart ID is required',
-            // 'cart_id.exists' => 'Cart ID must exist in the carts table',
-            'product_id.required' => 'Product ID is required',
-            'product_id.exists' => 'Product ID must exist in the products table',
-            'cart_quantity.required' => 'Quantity of the product is required',
-            'cart_quantity.integer' => 'Quantity must be an integer',
-            'cart_quantity.min' => 'Quantity must be at least 1',
-            // 'cart_price.required' => 'Price is required',
-            // 'cart_price.numeric' => 'Price must be a valid number',
-            // 'cart_price.regex' => 'Price must be a valid decimal number with up to 2 decimal places',
+            'title.required' => 'Title is required',
+            'body.required' => 'Body is required',
         ];
     }
 }

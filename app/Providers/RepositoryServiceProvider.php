@@ -9,10 +9,14 @@ use App\Repositories\ImportDetailRepository;
 use App\Repositories\ImportInterface;
 use App\Repositories\ImportRepository;
 use App\Repositories\OrderRepository;
+use App\Repositories\PermissionInterface;
+use App\Repositories\PermissionRepository;
 use App\Repositories\ProductInterface;
 use App\Repositories\ProductRepository;
 use App\Repositories\ReceiverAddressInterface;
 use App\Repositories\ReceiverAddressRepository;
+use App\Repositories\RoleInterface;
+use App\Repositories\RoleRepository;
 use App\Repositories\SupplierInterface;
 use App\Repositories\CategoryInterface;
 use App\Repositories\UserInterface;
@@ -67,7 +71,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PaymentMethodInterface::class, PaymentMethodRepository::class);
         $this->app->bind(DeliveryMethodInterface::class, DeliveryMethodRepository::class);
         $this->app->bind(ReviewInterface::class, ReviewRepository::class);
-
+        $this->app->bind(PermissionInterface::class, PermissionRepository::class);
+        $this->app->bind(RoleInterface::class, RoleRepository::class);
     }
 
     /**

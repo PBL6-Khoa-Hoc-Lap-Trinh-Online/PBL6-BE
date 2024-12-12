@@ -3,10 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Traits\APIResponse;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
-
-class RequestAddAdmin extends FormRequest
+use Illuminate\Foundation\Http\FormRequest;
+class RequestUpdatePermission extends FormRequest
 {
     use APIResponse;
     /**
@@ -26,11 +26,12 @@ class RequestAddAdmin extends FormRequest
      */
     public function rules()
     {
+        $id=$this->route('id');
         return [
-            'admin_fullname' => 'required|string',
-            'email' => 'required|unique:admins,email|string|email|max:100',
-            'role_id'=>'required|exists:roles,role_id',
-            // 'password' => 'required|string|min:6|confirmed',
+            // 'permission_name' => 'required|string|unique:permissions',
+            // 'permission_description' => 'string'
+            'permission_name' => ['required','string',Rule::unique('permissions')->ignore($id,'permission_id')],
+            'permission_description' => ['string']
         ];
     }
     public function failedValidation(Validator $validator)

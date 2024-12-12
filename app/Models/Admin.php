@@ -16,6 +16,7 @@ class Admin extends Authenticatable implements JWTSubject
     const UPDATED_AT ='admin_updated_at';
     protected $fillable = [
         'admin_id',
+        'role_id',
         'admin_fullname',
         'email',
         'password',
@@ -57,4 +58,29 @@ class Admin extends Authenticatable implements JWTSubject
     {
         return [];
     }
+    public function role(){
+        return $this->belongsTo(Role::class);
+    }
+    public function permissions(){
+        return $this->belongsToMany(Permission::class,'admin_permission');
+    }
+    public function getAllPermissions()
+    {
+        // Lấy quyền từ role của admin
+        $rolePermissions = $this->role ? $this->role->permissions->pluck('permission_name')->toArray() : [];
+
+        // Lấy quyền trực tiếp từ admin
+        $adminPermissions = $this->permissions->pluck('permission_name')->toArray();
+
+        // Kết hợp và loại bỏ trùng lặp
+        return array_unique(array_merge($rolePermissions, $adminPermissions));
+    }
+
+    public function hasPermissions($permission)
+    {
+        $allPermissions = $this->getAllPermissions();
+        return in_array($permission, $allPermissions);
+    }
+
+   
 }

@@ -29,13 +29,13 @@ class OrderService
 {
     use APIResponse;
     protected OrderInterface $orderRepository;
-    protected PayOSService $payOSService;
-    protected VnpayService $vnpayService;
-    public function __construct(OrderInterface $orderRepository)
+    protected PaymentServiceInterface $paymentServiceInterface;
+    protected PayOSServiceInterface $payOSServiceInterface;
+    public function __construct(OrderInterface $orderRepository,PaymentServiceInterface $paymentServiceInterface, PayOSServiceInterface $payOSServiceInterface)
     {
         $this->orderRepository = $orderRepository;
-        $this->payOSService = new PayOSService();
-        $this->vnpayService = new VnpayService();
+        $this->paymentServiceInterface = $paymentServiceInterface;
+        $this->payOSServiceInterface = $payOSServiceInterface;
     }
     public function getImportDetailsForOrder($productId, $orderQuantity)
     {
@@ -122,7 +122,6 @@ class OrderService
             'product_updated_at' => now(),
         ]);
     }
-  
     public function buyNow(RequestUserBuyProduct $request)
     {
         DB::beginTransaction();
@@ -145,34 +144,22 @@ class OrderService
                 'order_created_at' => now(),
             ];
             $order = $this->orderRepository->create($data);
-            //Tạo chi tiết đơn hàng
-
             $orderDetail = $this->createOrderDetail($order, $product, $request->quantity);
-           
             $payment_method_id=$request->payment_id;
             $this->updateProductQuantityAndSold($product, $request->quantity);
             $this->createPaymentRecord($order, $payment_method_id);
             $order_total_amount=$order->order_total_amount;
-            if ($payment_method_id == 1) {
-                $delivery_fee = $order_total_amount;
-            }
-            else if ($payment_method_id == 2 || $payment_method_id == 3 ) {
-               $delivery_fee=0;
-            }
-            $this->createDeliveriesRecord($order, $request->delivery_id, $delivery_fee);
-            DB::commit();
+            $deliveryFee=($payment_method_id==1) ? $order_total_amount : 0;
+            $this->createDeliveriesRecord($order, $request->delivery_id, $deliveryFee);
             $this->sendOrderConfirmationEmail($user, $order, $orderDetail);
-
-            if ($payment_method_id == 2) {
+            $response=$this->paymentServiceInterface->handlePayment($order->order_id, $order_total_amount);
+            DB::commit();
+            if($response){
+                $data=$response;
                 CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
-                $order_id=$order->order_id;
-                return $this->handlePayOSPayment($order_id, $order_total_amount);
+                return $this->responseSuccessWithData($data, 'Vui lòng thanh toán hoá đơn!', 200);
             }
-            else if($payment_method_id == 3){
-                $order_id=$order->order_id;
-                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
-                return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
-            }
+           
             $order['order_detail'] = $this->groupOrderDetailByProductId($orderDetail);
             $data = $order;
             return $this->responseSuccessWithData($data, 'Đặt hàng thành công!', 200);
@@ -181,20 +168,7 @@ class OrderService
             return $this->responseError($th->getMessage(), 400);
         }
     }
-    private function handlePayOSPayment($orderId, $totalAmount)
-    {
-        $YOUR_DOMAIN = UserEnum::URL_CLIENT;
-        $paymentData = [
-            "orderCode" => $orderId,
-            "amount" => $totalAmount,
-            "description" => "Thanh toán đơn hàng #" . $orderId,
-            "returnUrl" => $YOUR_DOMAIN . "/success",
-            "cancelUrl" => $YOUR_DOMAIN . "/cancel",
-        ];
-        $response = $this->payOSService->createPaymentLink($paymentData);
-        $data = $response['checkoutUrl'];
-        return $this->responseSuccessWithData($data, 'Vui lòng thanh toán hoá đơn!', 200);
-    }
+   
     public function checkoutCart(RequestUserCheckoutCart $request)
     {
         DB::beginTransaction();
@@ -237,35 +211,25 @@ class OrderService
             $payment_method_id = $request->payment_id;
             $this->createPaymentRecord($order, $payment_method_id);
             $order_total_amount = $order->order_total_amount;
-            if ($payment_method_id == 1) {
-                $delivery_fee = $order_total_amount;
-            } else if ($payment_method_id == 2 || $payment_method_id == 3) {
-                $delivery_fee = 0;
-            } 
-            $this->createDeliveriesRecord($order, $request->delivery_id, $delivery_fee);
+            $deliveryFee = ($payment_method_id == 1) ? $order_total_amount : 0;
+            $this->createDeliveriesRecord($order, $request->delivery_id, $deliveryFee);
             $order = Order::where('order_id', $order->order_id)->first();
             $order['order_status'] = $order->order_status;
             foreach($orderDetails as $order_detail){
                 $detail = $this->groupOrderDetailByProductId($order_detail);
                 $details[]= array_merge(...$detail);
             }
-            
             $order['order_detail'] = $details;
             $data = $order;
-            // return $this->responseSuccessWithData($orderDetails[0], 'Đặt hàng thành công!', 200);
             $this->sendOrderConfirmationEmail($user, $order, $orderDetails[0]);
-             DB::commit();
-            
-           
-            if ($request->payment_id == 2) {
-                $orderId=$order->order_id;
+            $response = $this->paymentServiceInterface->handlePayment($order->order_id, $order_total_amount);
+            DB::commit();
+            if ($response) {
                 CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
-                return $this->handlePayOSPayment($orderId, $order_total_amount);
-            } else if ($payment_method_id == 3) {
-                $order_id = $order->order_id;
-                CancelOrderJob::dispatch($order)->delay(now()->addMinutes(5));
-                return $this->vnpayService->createVnPayPayment($order_id, $order_total_amount);
+                $data = $response;
+                return $this->responseSuccessWithData($data, 'Vui lòng thanh toán hoá đơn!', 200);
             }
+            
            $data=$order;
             return $this->responseSuccessWithData($data, 'Đặt hàng thành công!', 200);
         } catch (Throwable $th) {
@@ -301,57 +265,8 @@ class OrderService
         }
         return $groupedDetails;
     }
-    private function sendOrderConfirmationEmail($user, $order, $orderDetails)
-    {
-        $groupedDetails = $this->groupOrderDetailByProductId($orderDetails);
-        // Tạo nội dung email
-        $content = '
-    <p>Đặt hàng thành công! Đơn hàng của bạn là:</p>
-    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;"> 
-        <tr>
-            <th colspan="2">Thông tin đơn hàng</th>
-        </tr>
-        <tr>
-            <td>Mã đơn hàng</td>
-            <td>' . $order->order_id . '</td>
-        </tr>
-        <tr>
-            <td>Tổng tiền</td>
-            <td>' . number_format($order->order_total_amount, 0, ',', '.') . ' VND</td>
-        </tr>
-        <tr>
-            <td>Ngày tạo</td>
-            <td>' . $order->order_created_at . '</td>
-        </tr>
-        <tr>
-            <th colspan="2">Chi tiết đơn hàng</th>';
-
-        // Duyệt qua mảng groupedDetails để hiển thị thông tin các sản phẩm
-        foreach ($groupedDetails as $detail) {
-            $content .= '
-        <tr>
-            <td>Mã sản phẩm</td>
-            <td>' . $detail['product_id'] . '</td>
-        </tr>
-        <tr>
-            <td>Số lượng</td>
-            <td>' . $detail['order_quantity'] . '</td>
-        </tr>
-        <tr>
-            <td>Giá</td>
-            <td>' . number_format($detail['order_price'], 0, ',', '.') . ' VND</td>
-        </tr>
-        <tr>
-            <td>Tổng giá</td>
-            <td>' . number_format($detail['order_total_price'], 0, ',', '.') . ' VND</td>
-        </tr>';
-        }
-
-        $content .= '</table>';
-        // dd($content);
-        // Đẩy email vào queue để gửi
-        Queue::push(new SendMailNotify($user->email, $content));
-    }
+  
+   
     public function createPaymentRecord($order, $payment_method_id)
     {
         $data = [
@@ -500,7 +415,7 @@ class OrderService
                 'order_id' => $request->order_id ?? '',
                 'payment_method_name' => $request->payment_method_name ?? '',
                 'delivery_method_name' => $request->delivery_method_name ?? '',
-                'order_status' => $request->order_status ?? 'pending',
+                'order_status' => $request->order_status ?? '',
                 'to_date' => $request->to_date ?? '',
                 'from_date' => $request->from_date ?? '',
                 'orderBy' => $orderBy,
@@ -663,11 +578,12 @@ class OrderService
             return $this->responseError($e->getMessage());
         }
     }
-
+    // Phương thức xử lý cách khác tạo 1 inteface chỉ liên kết với payos
     public function getPaymentInfo($orderCode)
     {
         try {
-            $data = $this->payOSService->getPaymentLink($orderCode);
+            // $data = $this->payOSService->getPaymentLink($orderCode);
+            $data = $this->payOSServiceInterface->getPaymentLink($orderCode);
             return $this->responseSuccess($data, 200);
         } catch (Throwable $e) {
             return $this->responseError($e->getMessage());
@@ -676,7 +592,8 @@ class OrderService
     public function cancelPayment($orderCode)
     {
         try {
-            $response = $this->payOSService->cancelPaymentLink($orderCode);
+            // $response = $this->payOSService->cancelPaymentLink($orderCode);
+            $response = $this->payOSServiceInterface->cancelPaymentLink($orderCode);
             $order = Order::where('order_id', $orderCode)->first();
             $order->update([
                 'order_status' => 'cancelled',
@@ -719,5 +636,55 @@ class OrderService
                 'retaining_quantity' => $importDetail->retaining_quantity + $orderDetail->order_quantity,
             ]);
         }
+    }
+    private function sendOrderConfirmationEmail($user, $order, $orderDetails)
+    {
+        $groupedDetails = $this->groupOrderDetailByProductId($orderDetails);
+        // Tạo nội dung email
+        $content = '
+    <p>Đặt hàng thành công! Đơn hàng của bạn là:</p>
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;"> 
+        <tr>
+            <th colspan="2">Thông tin đơn hàng</th>
+        </tr>
+        <tr>
+            <td>Mã đơn hàng</td>
+            <td>' . $order->order_id . '</td>
+        </tr>
+        <tr>
+            <td>Tổng tiền</td>
+            <td>' . number_format($order->order_total_amount, 0, ',', '.') . ' VND</td>
+        </tr>
+        <tr>
+            <td>Ngày tạo</td>
+            <td>' . $order->order_created_at . '</td>
+        </tr>
+        <tr>
+            <th colspan="2">Chi tiết đơn hàng</th>';
+
+        // Duyệt qua mảng groupedDetails để hiển thị thông tin các sản phẩm
+        foreach ($groupedDetails as $detail) {
+            $content .= '
+        <tr>
+            <td>Mã sản phẩm</td>
+            <td>' . $detail['product_id'] . '</td>
+        </tr>
+        <tr>
+            <td>Số lượng</td>
+            <td>' . $detail['order_quantity'] . '</td>
+        </tr>
+        <tr>
+            <td>Giá</td>
+            <td>' . number_format($detail['order_price'], 0, ',', '.') . ' VND</td>
+        </tr>
+        <tr>
+            <td>Tổng giá</td>
+            <td>' . number_format($detail['order_total_price'], 0, ',', '.') . ' VND</td>
+        </tr>';
+        }
+
+        $content .= '</table>';
+
+        Queue::push(new SendMailNotify($user->email, $content));
     }
 }
