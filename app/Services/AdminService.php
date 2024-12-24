@@ -100,18 +100,24 @@ class AdminService {
    public function changeRole(Request $request){
         DB::beginTransaction();
         try{
-            $request->validate(
-                [
-                    'role_id' => 'required|integer|exists:roles,role_id',
-                ]
-            );
+            $admin= auth('admin_api')->user();
             $admin_id = $request->route('id');
-            $admin = Admin::find($admin_id);
+            $adminChange = Admin::find($admin_id);
             if(!$admin){
                 return $this->responseError('Admin không tồn tại',404);
             }
-            $role_id = $request->role_id;
-            $admin->update(['role_id' => $role_id]);
+            $roleId=$adminChange->role_id;
+            if($admin->role_id == $roleId){
+                return $this->responseError('Bạn không thể gán quyền cho admin này!',400);
+            }
+            if($roleId == 1){
+                $role_id = 2;
+            }
+            else{
+                $role_id = 1;
+            }
+            // $role_id = $request->role_id;
+            $adminChange->update(['role_id' => $role_id]);
             DB::commit();
             return $this->responseSuccess('Gán role thành công',200);
         } catch (Throwable $e) {
@@ -203,7 +209,8 @@ class AdminService {
             $admin->access_token = auth()->guard('admin_api')->attempt($credentials);
             $admin->token_type = 'bearer';
             $admin->expires_in = auth()->guard('admin_api')->factory()->getTTL() * 60;
-            $admin->role = 'admin';
+            // $admin->role = 'admin';
+            $admin->role=Role::where('role_id',$admin->role_id)->value('role_name');
             $data = $admin;
             return $this->responseSuccessWithData($data, 'Đăng nhập thành công!');
         } catch (Throwable $e) {
@@ -398,7 +405,8 @@ class AdminService {
     
     public function manageAdmins(Request $request){
         try {
-            $adminId=auth('admin_api')->user()->admin_id;
+            $admin=auth('admin_api')->user();
+            $roleId=$admin->role_id;
             $orderBy = $request->orderBy ?? 'admin_id';
             $orderDirection = $request->sortlatest ?? 'true';
             switch ($orderBy) {
@@ -430,8 +438,8 @@ class AdminService {
                 'search' => $request->search ?? '',
                 'orderBy' => $orderBy,
                 'admin_is_delete' => $request->admin_is_delete ?? 'all',
-                'admin_id' => $adminId ??'',
-                'role_id' => $request->role_id ?? '',
+                'admin_id' => $request->admin_id ??'',
+                'role_id' => $roleId ?? '',
                 'role_name' => $request->role_name??'' ,
                 'orderDirection' => $orderDirection,
             ];

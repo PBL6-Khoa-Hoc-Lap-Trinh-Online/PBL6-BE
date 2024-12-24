@@ -17,7 +17,12 @@ class CheckPermission
         if (! $admin) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        
+        $role_name=DB::table('roles')
+                    ->where('role_id',$admin->role_id)
+                    ->value('role_name');  
+        if($role_name=='manager'){
+            return $next($request);
+        }
         $permissionRole=DB::table('role_permission')
                         ->join('permissions','role_permission.permission_id','=','permissions.permission_id')
                         ->where('role_permission.role_id',$admin->role_id)

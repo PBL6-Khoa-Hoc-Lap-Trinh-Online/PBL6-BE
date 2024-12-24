@@ -86,12 +86,12 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         Route::middleware('check.permission:change_block_users')->post('change-block/{id}', 'changeBlock');
         Route::middleware('check.permission:delete_users')->post('delete-user/{id}', 'deleteUser');
         
-        Route::middleware('check.role:supperadmin,manager')->group(function(){
+        Route::middleware('check.role:superadmin,manager')->group(function(){
             Route::get('manage-admins', 'manageAdmins');
             Route::get('{id}', 'getAdmin');
             Route::post('delete-admin/{id}','deleteAdmin');
+            Route::post('add-admin', 'addAdmin');
                 Route::middleware('check.role:manager')->group(function(){
-                    Route::post('add-admin', 'addAdmin');
                     Route::post('change-role/{id}', 'changeRole');
                     Route::post('assign-permission/{id}', 'assignPermission');
                     Route::post('remove-permission/{id}', 'removePermission');

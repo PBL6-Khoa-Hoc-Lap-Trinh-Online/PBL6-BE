@@ -26,7 +26,7 @@ class AdminRepository extends BaseRepository implements AdminInterface
                 }
             })
             ->when(!empty($filter->role_id), function ($query) use ($filter) {
-                $query->where('admins.role_id', $filter->role_id);
+                $query->where('admins.role_id','<', $filter->role_id);
             })
             ->when(!empty($filter->admin_id), function ($query) use ($filter) {
                 $query->where('admin_id','!=', $filter->admin_id);

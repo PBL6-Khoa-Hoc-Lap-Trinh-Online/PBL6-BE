@@ -8,6 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use App\Services\PayOSService;
 use App\Services\PayOSServiceInterface;
 use App\Services\VnpayService;
+use Illuminate\Support\Facades\URL;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -42,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
     }
 }
