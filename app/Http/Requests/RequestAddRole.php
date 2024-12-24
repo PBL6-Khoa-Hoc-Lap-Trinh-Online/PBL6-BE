@@ -5,13 +5,9 @@ namespace App\Http\Requests;
 use App\Traits\APIResponse;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
-
-
-class RequestAddCartDetail extends FormRequest
+class RequestAddRole extends FormRequest
 {
     use APIResponse;
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -30,18 +26,10 @@ class RequestAddCartDetail extends FormRequest
     public function rules()
     {
         return [
-            // 'cart_id' => 'required|exists:carts,cart_id',
-            'product_id' => 'required|exists:products,product_id',
-            'cart_quantity' => 'required|integer|min:1',
-            // 'cart_price' => ['required', 'numeric', 'bail', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'role_name' => 'required|string|unique:roles',
+            'role_description' => 'string'
         ];
     }
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param Validator $validator
-     */
     public function failedValidation(Validator $validator)
     {
         $errors = $validator->errors()->all();

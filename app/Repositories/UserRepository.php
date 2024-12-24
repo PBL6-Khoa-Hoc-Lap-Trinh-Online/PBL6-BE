@@ -16,10 +16,14 @@ class UserRepository extends BaseRepository implements UserInterface{
                 });
             })
             ->when(isset($filter->user_is_delete), function ($query) use ($filter) {
-                    $query->where('users.user_is_delete', $filter->user_is_delete);
+                    if($filter->user_is_delete !== 'all'){
+                        $query->where('users.user_is_delete', $filter->user_is_delete);
+                    }
             })
             ->when(isset($filter->user_is_block), function ($query) use ($filter) {
-                $query->where('users.user_is_block', $filter->user_is_block);
+                if($filter->user_is_block !== 'all'){
+                    $query->where('users.user_is_block', $filter->user_is_block);
+                }
             })
             ->when(!empty($filter->orderBy), function ($query) use ($filter) {
                 $query->orderBy($filter->orderBy, $filter->orderDirection);

@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\APIResponse;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 
 class RequestAddAdmin extends FormRequest
 {
+    use APIResponse;
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -34,13 +35,8 @@ class RequestAddAdmin extends FormRequest
     public function failedValidation(Validator $validator)
     {
         $errors = $validator->errors()->all();
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'data' => $errors,
-            'errors' => $validator->errors(),
-            'status' => 422,
-        ], 422));
+
+        return $this->responseErrorValidate($errors, $validator);
     }
 
     public function messages()

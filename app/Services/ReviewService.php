@@ -8,6 +8,7 @@ use App\Models\OrderDetail;
 use App\Models\Review;
 use App\Repositories\ReviewInterface;
 use App\Traits\APIResponse;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -55,24 +56,14 @@ class ReviewService{
                     // Nếu chỉ là một file, chuyển nó thành mảng
                     $files = [$files];
                 }
-                foreach ($files as $file) {
-                    $name = time() . $file->getClientOriginalName();
-                    $filePath = 'review_image/' . $name;
-
-                    // Upload file to S3 và gán vào biến riêng $uploadSuccess
-                    $uploadSuccess = Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // Kiểm tra nếu upload thành công
-                    if ($uploadSuccess) {
-                        // Set ACL to public-read
-                        Storage::disk('s3')->setVisibility($filePath, 'public');
-
-                        // Lấy URL của file
-                        $url = Storage::disk('s3')->url($filePath);
-
-                        // Thêm URL vào mảng $imageUrls
-                        $imageUrls[] = $url;
-                    }
+                foreach ($files as $image) {
+                    //upload image to cloudinary
+                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
+                        'resource_type' => 'auto',
+                    ]);
+                    //Add the url to the array
+                    $imageUrls[] = $uploadFile->getSecurePath();
                 }
                 $data['review_images'] = $imageUrls;
             }
@@ -98,45 +89,29 @@ class ReviewService{
             $data['user_id'] = $user_id;
             $imageUrls = [];
             if ($request->hasFile('review_images')) {
-                if ($review->review_images) {
-                    // $urlImages=json_decode($product->product_images,true);
-                    $urlImages = $review->review_images;
-                    // Duyệt qua từng URL trong mảng, kể cả nếu chỉ có một phần tử
-                    foreach ($urlImages as $url) {
-                        // Lấy tên file từ URL (ví dụ: 172682205420240819041436-1-P28111_1.jpg)
-                        $key_image = basename($url);
-                        // Xóa file khỏi S3
-                        Storage::disk('s3')->delete('review_image/' . $key_image);
-                    }
-                }
                 $files = $request->file('review_images');
                 if (!is_array($files)) {
                     // Nếu chỉ là một file, chuyển nó thành mảng
                     $files = [$files];
                 }
-                foreach ($files as $file) {
-                    $name = time() . $file->getClientOriginalName();
-                    $filePath = 'review_image/' . $name;
-
-                    // Upload file to S3 và gán vào biến riêng $uploadSuccess
-                    $uploadSuccess = Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // Kiểm tra nếu upload thành công
-                    if ($uploadSuccess) {
-                        // Set ACL to public-read
-                        Storage::disk('s3')->setVisibility($filePath, 'public');
-
-                        // Lấy URL của file
-                        $url = Storage::disk('s3')->url($filePath);
-
-                        // Thêm URL vào mảng $imageUrls
-                        $imageUrls[] = $url;
+                if ($review->review_images) {
+                    foreach ($review->review_images as $url) {
+                        $id_file = explode('.', implode('/', array_slice(explode('/', $url), 7)))[0];
+                        Cloudinary::destroy($id_file);
                     }
                 }
-                $data['review_images'] = $imageUrls;
-            }
-            else{
-                $data['review_images'] = $review->review_images;
+                foreach ($files as $image) {
+                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
+                        'resource_type' => 'auto',
+                    ]);
+                    //Add the url to the array
+                    $imageUrls[] = $uploadFile->getSecurePath();
+                }
+                $data = array_merge($request->all(), ['review_images' => $imageUrls]);
+            } else {
+                $request['review_images'] = $review->review_images;
+                $review->update($request->all());
             }
             $data['review_updated_at'] = now();
             $review->update($data);
@@ -155,15 +130,10 @@ class ReviewService{
             if(!$review){
                 return $this->responseError('Đánh giá không tồn tại!',404);
             }
-            if ($review->review_images) {
-                // $urlImages=json_decode($product->product_images,true);
-                $urlImages = $review->review_images;
-                // Duyệt qua từng URL trong mảng, kể cả nếu chỉ có một phần tử
-                foreach ($urlImages as $url) {
-                    // Lấy tên file từ URL (ví dụ: 172682205420240819041436-1-P28111_1.jpg)
-                    $key_image = basename($url);
-                    // Xóa file khỏi S3
-                    Storage::disk('s3')->delete('review_image/' . $key_image);
+            if($review->review_images){
+                foreach($review->review_images as $url){
+                    $id_file = explode('.', implode('/', array_slice(explode('/', $url), 7)))[0];
+                    Cloudinary::destroy($id_file);
                 }
             }
             $review->delete();

@@ -1,19 +1,30 @@
 <?php
 namespace App\Services;
+
+use App\Enums\UserEnum;
+use App\Services\PaymentServiceInterface;
 use PayOS\PayOS;
 use Throwable;
-class PayOSService{
+class PayOSService implements PaymentServiceInterface, PayOSServiceInterface{
     protected $payOS;
+
     public function __construct()
     {
         $this->payOS = new PayOS("ee6604fb-66b8-4078-874f-11824323fdaf", "3f9d54fb-6c5a-48dd-a71a-5a75e99634e8", "531c42fba7d885c1c2dc916fb6fac8f52c85e54fc4e262a4ca1c48a304669c56");
     }
-    //Create a payment link
-    public function createPaymentLink($data)
+    public function handlePayment($orderId, $totalAmount)
     {
         try {
+            $YOUR_DOMAIN = UserEnum::URL_CLIENT;
+            $data = [
+                "orderCode" => $orderId,
+                "amount" => $totalAmount,
+                "description" => "Thanh toán đơn hàng #" . $orderId,
+                "returnUrl" => $YOUR_DOMAIN . "/success",
+                "cancelUrl" => $YOUR_DOMAIN . "/cancel",
+            ];
             $response = $this->payOS->createPaymentLink($data);
-            return $response;
+            return $response['checkoutUrl'];
         } catch (Throwable $e) {
             return $e->getMessage();
         }

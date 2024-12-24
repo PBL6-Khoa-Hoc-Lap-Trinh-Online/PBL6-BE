@@ -71,5 +71,14 @@ class AdminController extends Controller
     public function resendVerifyEmail(RequestResendVerifyEmail $request){
         return $this->adminService->resendVerifyEmail($request);
     }
+    public function assignPermission(Request $request,$id){
+        return $this->adminService->assignPermissionToAdmin($request,$id);
+    }
+    public function removePermission(Request $request,$id){
+        return $this->adminService->removePermissionFromAdmin($request,$id);
+    }
+    public function getAdmin($id){
+        return $this->adminService->getById($id);
+    }
 }
 

@@ -6,8 +6,10 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReceiverAddressController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
@@ -81,15 +83,18 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
         Route::post('update-profile', 'updateProfile');
         Route::post('change-password', 'changePassword');
         Route::get('manage-users', 'manageUsers');
-        Route::post('change-block/{id}', 'changeBlock');
-        Route::post('delete-user/{id}', 'deleteUser');
+        Route::middleware('check.permission:change_block_users')->post('change-block/{id}', 'changeBlock');
+        Route::middleware('check.permission:delete_users')->post('delete-user/{id}', 'deleteUser');
         
-        Route::middleware('check.role:1,2')->group(function(){
+        Route::middleware('check.role:superadmin,manager')->group(function(){
             Route::get('manage-admins', 'manageAdmins');
+            Route::get('{id}', 'getAdmin');
             Route::post('delete-admin/{id}','deleteAdmin');
-                Route::middleware('check.role:2')->group(function(){
+            Route::post('add-admin', 'addAdmin');
+                Route::middleware('check.role:manager')->group(function(){
                     Route::post('change-role/{id}', 'changeRole');
-                    Route::post('add-admin','addAdmin');
+                    Route::post('assign-permission/{id}', 'assignPermission');
+                    Route::post('remove-permission/{id}', 'removePermission');
                 });  	
             }); 
 
@@ -97,14 +102,13 @@ Route::prefix('admin')->controller(AdminController::class)->group(function (){
     });
 });
 
-
 //brand
 Route::prefix('brands')->controller(BrandController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
+        Route::middleware('check.permission:add_brands')->post('add', 'add');
+        Route::middleware('check.permission:update_brands')->post('update/{id}', 'update');
         Route::get('all', 'getAllByAdmin');
-        Route::delete('{id}', 'delete');
+        Route::middleware('check.permission:delete_brands')->delete('{id}', 'delete');
     });
     Route::get('names', 'getNameBrand');
     Route::get('slug/{slug}', 'getBySlug');
@@ -115,11 +119,11 @@ Route::prefix('brands')->controller(BrandController::class)->group(function () {
 //supplier
 Route::prefix('suppliers')->controller(SupplierController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
+        Route::middleware('check.permission:add_suppliers')->post('add', 'add');
+        Route::middleware('check.permission:update_suppliers')->post('update/{id}', 'update');
         Route::get('names', 'getNameSupplier');
         Route::get('{id}', 'get');
-        Route::delete('{id}', 'delete');
+        Route::middleware('check.permission:delete_suppliers')->delete('{id}', 'delete');
         Route::get('', 'getAll');
     });
 });
@@ -127,10 +131,10 @@ Route::prefix('suppliers')->controller(SupplierController::class)->group(functio
 //category
 Route::prefix('categories')->controller(CategoryController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}','update');
-        Route::post('delete/{id}', 'delete');
-        Route::post('delete-many', 'deleteMany');
+        Route::middleware('check.permission:add_categories')->post('add', 'add');
+        Route::middleware('check.permission:update_categories')->post('update/{id}','update');
+        Route::middleware('check.permission:delete_categories')->post('delete/{id}', 'delete');
+        Route::middleware('check.permission:delete_many_categories')->post('delete-many', 'deleteMany');
         Route::get('all', 'getAll');
     });
     Route::get('names', 'getNameCategory');
@@ -144,10 +148,10 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
 //product
 Route::prefix('products')->controller(ProductController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
-        Route::post('delete/{id}', 'delete');
-        Route::post('delete-many', 'deleteMany');
+        Route::middleware('check.permission:add_products')->post('add', 'add');
+        Route::middleware('check.permission:update_products')->post('update/{id}', 'update');
+        Route::middleware('check.permission:delete_products')->post('delete/{id}', 'delete');
+        Route::middleware('check.permission:delete_many_products')->post('delete-many', 'deleteMany');
         Route::get('all', 'getAllByAdmin');
     });
     Route::get('names', 'getNameProduct');
@@ -160,23 +164,24 @@ Route::prefix('products')->controller(ProductController::class)->group(function 
 //Import
 Route::prefix('imports')->controller(ImportController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
+        Route::middleware('check.permission:add_imports')->post('add', 'add');
+        Route::middleware('check.permission:add_imports')->post('update/{id}', 'update');
         Route::get('{id}', 'getImportDetails');
         Route::get('', 'getAll');
     });
 });
-Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
-    Route::middleware('check.auth:user_api')->group(function () {
-        Route::post('add', 'add');
-        Route::post('update/{id}', 'update');
-        Route::post('delete/{id}', 'delete');
-    });
-    Route::get('product/{id}', 'getByProduct');
-    Route::get('user/{id}', 'getByUser');
-    Route::get('{id}', 'get');
-    Route::get('', 'getAll');
-});
+
+// Route::prefix('reviews')->controller(ReviewController::class)->group(function () {
+//     Route::middleware('check.auth:user_api')->group(function () {
+//         Route::post('add', 'add');
+//         Route::post('update/{id}', 'update');
+//         Route::post('delete/{id}', 'delete');
+//     });
+//     Route::get('product/{id}', 'getByProduct');
+//     Route::get('user/{id}', 'getByUser');
+//     Route::get('{id}', 'get');
+//     Route::get('', 'getAll');
+// });
 
 
 //user order
@@ -194,11 +199,11 @@ Route::prefix('orders')->controller(OrderController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
         Route::get('all', 'getAll');
         Route::get('detail-order/{id}','getDetailOrder');
-        Route::post('update-status/{id}', 'updateStatus');
+        Route::middleware('check.permission:update_orders')->post('update-status/{id}', 'updateStatus');
     });
 });
 Route::prefix('payment-methods')->controller(PaymentController::class)->group(function () {
-    Route::middleware('check.auth:admin_api')->group(function () {
+    Route::middleware('check.auth:admin_api,check.role:supperadmin,manager')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::get('all', 'getAllByAdmin');
@@ -213,7 +218,7 @@ Route::prefix('payment-methods')->controller(PaymentController::class)->group(fu
 Route::prefix('payments')->controller(PaymentController::class)->group(function () {
     Route::get('vnpay-return', 'vnpayReturn');
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('update/{id}', 'updateStatus');
+        Route::middleware('check.permission:update_status_payments')->post('update/{id}', 'updateStatus');
         Route::get('all', 'managePayment');
         Route::get('{id}', 'getPaymentDetail');
     });
@@ -226,7 +231,7 @@ Route::prefix('payments')->controller(PaymentController::class)->group(function 
 });
 //delivery-methods
 Route::prefix('delivery-methods')->controller(DeliveryController::class)->group(function () {
-    Route::middleware('check.auth:admin_api')->group(function () {
+    Route::middleware('check.auth:admin_api,check.role:supperadmin,manager')->group(function () {
         Route::post('add', 'add');
         Route::post('update/{id}', 'update');
         Route::get('all', 'getAllByAdmin');
@@ -241,7 +246,7 @@ Route::prefix('delivery-methods')->controller(DeliveryController::class)->group(
 //delivery
 Route::prefix('deliveries')->controller(DeliveryController::class)->group(function () {
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('update/{id}', 'updateStatus');
+        Route::middleware('check.permission:update_status_deliveries')->post('update/{id}', 'updateStatus');
         Route::get('all', 'manageDelivery');
         Route::get('{id}', 'getDeliveryDetail');
     });
@@ -286,13 +291,13 @@ Route::prefix('disease')->controller(DiseaseController::class)->group(function (
     Route::get('getCategory/{id}', 'getDiseaseCategory');
     Route::get('search', 'searchDisease');
     Route::middleware('check.auth:admin_api')->group(function () {
-        Route::post('add', 'add');
+        Route::middleware('check.permission:add_disease')->post('add', 'add');
         Route::get('getAll', 'getAll');
-        Route::post('update/{id}', 'update');
-        Route::post('addCategory', 'addDiseaseCategory');
-        Route::post('deleteCategory', 'deleteDiseaseCategory');
+        Route::middleware('check.permission:update_disease')->post('update/{id}', 'update');
+        Route::middleware('check.permission:add_category_disease')->post('addCategory', 'addDiseaseCategory');
+        Route::middleware('check.permission:delete_category_disease')->post('deleteCategory', 'deleteDiseaseCategory');
         Route::get('categoryDisease/{id}', 'getCategoryDisease');
-        Route::post('delete/{id}', 'deleteDisease');
+        Route::middleware('check.permission:delete_disease')->post('delete/{id}', 'deleteDisease');
     });
     Route::get('{id}', 'get');
 });
@@ -321,5 +326,34 @@ Route::prefix('reviews')->controller(ReviewController::class)->group(function ()
         Route::get('', 'getAll');
         Route::post('hidden/{id}','hiddenReview');
 
+    });
+});
+
+//Manage Role
+Route::prefix("roles")->controller(RoleController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('', 'getAll');
+        Route::get('{id}', 'get');
+        Route::middleware('check.role:manager')->group(function () {
+            Route::post('', 'add');
+            Route::put('{id}', 'update');
+            Route::delete('{id}', 'delete');
+            Route::post('assign-permission/{id}', 'assignPermission');
+            Route::post('remove-permission/{id}', 'removePermission');
+        });
+        
+    });
+});
+//Manage Permission
+Route::prefix("permissions")->controller(PermissionController::class)->group(function () {
+    Route::middleware('check.auth:admin_api')->group(function () {
+        Route::get('', 'getAll');
+        Route::get('{id}', 'get');
+        Route::middleware('check.role:manager')->group(function () {
+            Route::post('', 'add');
+            Route::put('{id}', 'update');
+            Route::delete('{id}', 'delete');
+        });
+        
     });
 });

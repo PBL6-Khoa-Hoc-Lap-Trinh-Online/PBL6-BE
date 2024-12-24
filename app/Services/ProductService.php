@@ -170,28 +170,16 @@ class ProductService{
                     // Nếu chỉ là một file, chuyển nó thành mảng
                     $files = [$files];
                 }
-                foreach ($files as $file) {
-                    $name = time() . $file->getClientOriginalName();
-                    $filePath = 'product_image/' . $name;
-
-                    // Upload file to S3 và gán vào biến riêng $uploadSuccess
-                    $uploadSuccess = Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // Kiểm tra nếu upload thành công
-                    if ($uploadSuccess) {
-                        // Set ACL to public-read
-                        Storage::disk('s3')->setVisibility($filePath, 'public');
-
-                        // Lấy URL của file
-                        $url = Storage::disk('s3')->url($filePath);
-
-                        // Thêm URL vào mảng $imageUrls
-                        $imageUrls[] = $url;
-                    }
+                foreach ($files as $image) {
+                    //upload image to cloudinary
+                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
+                        'resource_type' => 'auto',
+                    ]);
+                    //Add the url to the array
+                    $imageUrls[] = $uploadFile->getSecurePath();
                 }
-
                 $data['product_images'] = $imageUrls;
-                // $data['product_images'] = json_encode($imageUrls, JSON_UNESCAPED_SLASHES);
             }
             $data['product_created_at'] = now();
             $product = Product::create($data);
@@ -204,7 +192,7 @@ class ProductService{
             return $this->responseError($e->getMessage());
         }
     }
-    //update when image upload AWS S3
+    
     public function update(RequestUpdateProduct $request, $id)
     {
         DB::beginTransaction();
@@ -215,41 +203,27 @@ class ProductService{
             }
             $imageUrls = [];
             if ($request->hasFile('product_images')) {
-                if ($product->product_images) {
-                    // $urlImages=json_decode($product->product_images,true);
-                    $urlImages = $product->product_images;
-                    // Duyệt qua từng URL trong mảng, kể cả nếu chỉ có một phần tử
-                    foreach ($urlImages as $url) {
-                        // Lấy tên file từ URL (ví dụ: 172682205420240819041436-1-P28111_1.jpg)
-                        $key_image = basename($url);
-                        // Xóa file khỏi S3
-                        Storage::disk('s3')->delete('product_image/' . $key_image);
-                    }
-                }
                 $files = $request->file('product_images');
                 if (!is_array($files)) {
                     // Nếu chỉ là một file, chuyển nó thành mảng
                     $files = [$files];
                 }
-                foreach ($files as $file) {
-                    $name = time() . $file->getClientOriginalName();
-                    $filePath = 'product_image/' . $name;
-
-                    // Upload file to S3 và gán vào biến riêng $uploadSuccess
-                    $uploadSuccess = Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // Kiểm tra nếu upload thành công
-                    if ($uploadSuccess) {
-                        // Set ACL to public-read
-                        Storage::disk('s3')->setVisibility($filePath, 'public');
-
-                        // Lấy URL của file
-                        $url = Storage::disk('s3')->url($filePath);
-
-                        // Thêm URL vào mảng $imageUrls
-                        $imageUrls[] = $url;
+                if ($product->product_images) {
+                    foreach ($product->product_images as $img) {
+                        $id_file = explode('.', implode('/', array_slice(explode('/', $img), 7)))[0];
+                        Cloudinary::destroy($id_file);
                     }
                 }
+                foreach ($files as $image) {
+                    //upload image to cloudinary
+                    $uploadFile = Cloudinary::upload($image->getRealPath(), [
+                        'folder' => 'pbl6_pharmacity/thumbnail/product_image',
+                        'resource_type' => 'auto',
+                    ]);
+                    //Add the url to the array
+                    $imageUrls[] = $uploadFile->getSecurePath();
+                }
+                
                 $data = array_merge($request->all(), ['product_images' => $imageUrls, 'product_updated_at' => now()]);  
                 $product->update($data);
             } else {

@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Services\CODPaymentService;
+use App\Services\PaymentServiceInterface;
 use Illuminate\Support\ServiceProvider;
+use App\Services\PayOSService;
+use App\Services\PayOSServiceInterface;
+use App\Services\VnpayService;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +19,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Đăng ký binding theo phương thức thanh toán
+        $this->app->bind(PaymentServiceInterface::class, function ($app) {
+            $paymentMethodId = request()->input('payment_id');
+
+            switch ($paymentMethodId) {
+                    case 2:
+                        return app(PayOSService::class);
+                    case 3:
+                        return app(VnpayService::class);
+                    default:
+                        return app(CODPaymentService::class);
+                }
+        });
+        $this->app->singleton(PayOSServiceInterface::class, function ($app) {
+            return new PayOSService();
+        });
     }
 
     /**
@@ -23,9 +44,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-         if ($this->app->environment('production')) {
-            URL::forceScheme('https');
-        }
-        Paginator::useBootstrap();
+
+        if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
+
     }
 }

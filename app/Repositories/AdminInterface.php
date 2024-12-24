@@ -8,4 +8,5 @@ namespace App\Repositories;
 interface AdminInterface extends RepositoryInterface
 {
     public static function getAllAdmin($filter);
+    public static function getPermissionOfAdmin($admin_id);
 }
